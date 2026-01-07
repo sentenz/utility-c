@@ -1,0 +1,30 @@
+{
+  "name": "utility-c",
+  "version-semver": "1.0.0",
+  "dependencies": [
+    "uriparser",
+    "gtest",
+    "mbedtls",
+    "argon2",
+    "pcre"
+  ],
+  "builtin-baseline": "288e8bebf4ca67c1f8ebd49366b03650cfd9eb7d",
+  "overrides": [
+    {
+      "name": "uriparser",
+      "version": "0.9.6"
+    },
+    {
+      "name": "gtest",
+      "version": "1.12.1"
+    },
+    {
+      "name": "mbedtls",
+      "version": "2.28.1"
+    },
+    {
+      "name": "argon2",
+      "version": "20190702"
+    }
+  ]
+}

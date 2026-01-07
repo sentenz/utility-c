@@ -1,0 +1,7 @@
+[requires]
+gtest/cci.20210126
+argon2/20190702
+
+[generators]
+CMakeDeps
+CMakeToolchain

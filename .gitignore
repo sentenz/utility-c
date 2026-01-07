@@ -1,0 +1,82 @@
+# https://www.toptal.com/developers/gitignore
+
+# Miscellaneous
+*.bak
+~$*
+.metadata
+node_modules/
+
+# Git
+.gitmodules
+
+# Logs
+*.log
+logs/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+###
+
+# Python byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C/C++ Prerequisites
+*.d
+
+# C Object files
+*.ko
+*.elf
+
+# C++ Object files
+*.slo
+*.lo
+
+# C/C++ Object files
+*.o
+*.obj
+
+# C Linker output
+*.ilk
+*.map
+*.exp
+
+# C/C++ Precompiled Headers
+*.gch
+*.pch
+
+# C Static libraries
+*.lib
+*.a
+*.la
+*.lo
+lib/
+
+# C/C++ Dynamic libraries (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# C/C++ Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+bin/
+
+# C Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb

@@ -1,0 +1,80 @@
+# Architecture Decision Record (ADR)
+
+## Title: Choosing a Branching Strategy for a C Project
+
+**Status**: Accepted \
+**Date**: 07/05/2023 \
+**Technical decision**: Choose Scaled Trunk-Based Development as the branching strategy for the C project.
+
+### Context
+
+The C project requires an effective branching strategy to facilitate collaborative development, streamline the release process, and maintain a stable and manageable codebase. Choosing the right branching strategy is essential for ensuring efficient code integration, minimizing conflicts, and promoting a smooth development workflow. Several popular branching strategies, including Git Flow, GitHub Flow, Trunk-Based Development, and Scaled Trunk-Based Development, have been considered for this project.
+
+### Decision
+
+After evaluating Git Flow, GitHub Flow, Trunk-Based Development, and Scaled Trunk-Based Development, we have decided to adopt the Scaled Trunk-Based Development strategy for the C project. This strategy provides a balance between the simplicity of Trunk-Based Development and the scalability needed for a larger team and more complex development environment.
+
+### We also considered the following alternatives
+
+1. Git Flow
+
+    Git Flow is a branching strategy that utilizes two main branches, "develop" for ongoing development and "main" for stable releases. While Git Flow offers a structured approach to branching and release management, its complexity and overhead may not be necessary for the C project's needs.
+
+2. GitHub Flow
+
+    GitHub Flow is a lightweight branching strategy that emphasizes simplicity and continuous integration. It promotes a single branch, usually "main", as the main development branch. While GitHub Flow is straightforward and suitable for smaller projects or teams, it may lack the necessary scalability for larger teams or complex development environments.
+
+3. Trunk-Based Development
+
+    Trunk-Based Development advocates for a minimalistic branching strategy, where all development work happens on the main branch (often referred to as "trunk" or "main"). This approach encourages frequent integration, reduces the complexity of long-lived branches, and fosters a collaborative development environment. However, Trunk-Based Development may be less suitable for larger teams or projects with multiple concurrent feature developments.
+
+### Rationale
+
+The decision to choose Scaled Trunk-Based Development as the branching strategy is based on the following factors:
+
+1. Simplicity of Trunk-Based Development
+
+    Trunk-Based Development promotes a streamlined and straightforward approach to branching, where all development work occurs on the main branch (often referred to as "trunk" or "main"). This simplicity allows for rapid integration of changes, reduces overhead associated with long-lived branches, and fosters a collaborative development environment.
+
+2. Scalability for Larger Teams
+
+    Scaled Trunk-Based Development builds upon the simplicity of Trunk-Based Development and introduces additional branch types to support concurrent development and release management in larger teams. It allows for the creation of short-lived feature branches for individual feature development, while still maintaining a focus on integrating changes into the main branch frequently.
+
+3. Release Management
+
+    Scaled Trunk-Based Development accommodates the need for more controlled release management by introducing release branches. These branches serve as stable points for release preparation and enable thorough testing, bug fixing, and finalizing features before merging them into the main branch.
+
+4. Continuous Integration and Delivery (CI/CD)
+
+    Scaled Trunk-Based Development aligns well with CI/CD practices, as it encourages frequent integration and testing of changes. This promotes a more agile and iterative development process, with a focus on delivering reliable and high-quality software.
+
+### Consequences
+
+The adoption of Scaled Trunk-Based Development as the branching strategy for the C project will result in the following consequences:
+
+1. Streamlined Development Workflow
+
+    Scaled Trunk-Based Development simplifies the branching model and encourages continuous integration, fostering a streamlined and collaborative development workflow.
+
+2. Improved Code Integration
+
+    By minimizing the use of long-lived branches, Scaled Trunk-Based Development reduces the risk of conflicts and merge difficulties, leading to smoother code integration.
+
+3. Effective Release Management
+
+    The introduction of release branches in Scaled Trunk-Based Development enables more controlled and stable release preparation, ensuring that features are thoroughly tested and finalized before merging them into the main branch.
+
+4. Alignment with CI/CD
+
+    Scaled Trunk-Based Development aligns well with CI/CD practices, facilitating the implementation of automated testing, continuous integration, and continuous delivery pipelines.
+
+### Related ADRs
+
+None.
+
+### Notes
+
+- Scaled Trunk-Based Development [article](https://trunkbaseddevelopment.com/#scaled-trunk-based-development)
+- Trunk-Based Development [article](https://trunkbaseddevelopment.com/#trunk-based-development-for-smaller-teams)
+- Git-flow [article](https://www.atlassian.com/de/git/tutorials/comparing-workflows/gitflow-workflow)
+- GitHub Flow [article](https://guides.github.com/introdgithubuction/flow/)

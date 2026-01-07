@@ -1,0 +1,6 @@
+# Ignore everything
+*
+/external
+
+# Allow files and directories
+!internal/opcua

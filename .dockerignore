@@ -1,0 +1,11 @@
+# Ignore everything
+*
+
+# Allow files and directories
+!external/open62541/deps/ua-nodeset/*
+!scripts/*
+!external/*
+!internal/*
+!cmd/app/main.c
+!.git
+!**/CMakeLists.txt
