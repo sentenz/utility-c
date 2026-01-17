@@ -179,9 +179,32 @@ Contribution guidelines and project management tools.
       make cmake-gcc-release-build
       ```
 
+      ```bash
+      make cmake-gcc-test-run
+      ```
+
 ### 2.5. Dependency Manager
 
-#### 2.5.1. Conan
+#### 2.5.1. vcpkg
+
+[vcpkg](https://vcpkg.io/) is a cross-platform package manager for C and C++ libraries, integrated via CMake toolchain.
+
+1. Insights and Details
+
+    - [vcpkg.json](vcpkg.json)
+      > The vcpkg manifest file specifying project dependencies.
+
+    - [CMakePresets.json](CMakePresets.json)
+      > CMake presets include vcpkg toolchain configuration.
+
+      ```json
+      "toolchainFile": "${sourceDir}/tools/vcpkg/scripts/buildsystems/vcpkg.cmake"
+      ```
+
+    - [tools/vcpkg/](tools/vcpkg/)
+      > vcpkg installation directory (excluded from version control).
+
+#### 2.5.2. Conan
 
 [Conan](https://conan.io/) is a package manager for C and C++ that simplifies the process of managing dependencies and libraries.
 
