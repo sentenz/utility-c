@@ -94,6 +94,10 @@ cmake-gcc-test-unit-run: cmake-gcc-test-unit-build
 	ctest --preset test --output-junit "$(CURDIR)/${LOGS_PATH_TEST}/junit.xml"
 .PHONY: cmake-gcc-test-unit-run
 
+## Run the tests (alias for cmake-gcc-test-unit-run)
+cmake-gcc-test-run: cmake-gcc-test-unit-run
+.PHONY: cmake-gcc-test-run
+
 ## Clean the unit test build artifacts
 cmake-gcc-test-unit-clean:
 	cmake --build --preset test --target clean

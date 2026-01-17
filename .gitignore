@@ -80,3 +80,6 @@ bin/
 *.su
 *.idb
 *.pdb
+
+# vcpkg
+tools/vcpkg/
