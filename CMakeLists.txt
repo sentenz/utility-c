@@ -59,16 +59,14 @@ if(UTILITYC_BUILD_LIB)
   target_link_libraries(${PROJECT_NAME} PUBLIC m ${static_libs})
 endif() # UTILITYC_BUILD_LIB
 
-# Build tests
+# Build tests - meta_gtest will create the test target in subdirectories
 if(UTILITYC_BUILD_TEST)
+  # Find GTest package required by meta_gtest
   find_package(GTest CONFIG REQUIRED)
-
-  # Add Test Target
-  add_executable(${PROJECT_NAME}-test)
-
-  # Link the static libraries to this target
-  target_link_libraries(${PROJECT_NAME}-test GTest::gmock GTest::gtest
-                        GTest::gmock_main GTest::gtest_main ${PROJECT_NAME})
+  
+  # Enable testing for CTest integration
+  include(CTest)
+  enable_testing()
 endif() # UTILITYC_BUILD_TEST
 
 # Generate Test code coverage
