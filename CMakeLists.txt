@@ -1,12 +1,21 @@
 cmake_minimum_required(VERSION 3.21.0)
 
-# Setup vcpkg script with CMake (note: should be placed before project() call)
-set(VCPKG_ROOT "${CMAKE_CURRENT_LIST_DIR}/tools/vcpkg")
-set(CMAKE_TOOLCHAIN_FILE
-    "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-    CACHE STRING "Vcpkg toolchain file")
+project(${META_PROJECT_NAME} LANGUAGES C CXX)
 
-project(utility-c)
+include(GNUInstallDirs)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/tools/cmake")
+
+include(meta_policy)
+meta_policy()
+
+# Set default for META_ENABLE_COMPILER_CACHE if not provided by preset
+if(NOT DEFINED META_ENABLE_COMPILER_CACHE)
+  set(META_ENABLE_COMPILER_CACHE OFF)
+endif()
+
+include(meta_compiler_cache)
+meta_compiler_cache(ENABLE ${META_ENABLE_COMPILER_CACHE})
 
 # Utility-c library options
 option(UTILITYC_BUILD_LIB "Build the library" ON)
@@ -17,10 +26,6 @@ if(PROJECT_IS_TOP_LEVEL)
   # Export compile commands for clang-tidy
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
   set(CMAKE_VERBOSE_MAKEFILE ON)
-
-  # Append CMAKE_MODULE_PATH with cmake modules directory
-  set(CMAKE_MODULE_PATH
-      "${CMAKE_MODULE_PATH};${PROJECT_SOURCE_DIR}/tools/cmake")
 
   # Set language standards
   set(CMAKE_C_STANDARD 99)
@@ -35,23 +40,15 @@ if(UTILITYC_BUILD_LIB)
   target_compile_definitions(${PROJECT_NAME} PRIVATE S_HAVE_CONFIG_H S_POSIX
                                                      HAVE_CONFIG_H)
 
-  if(PROJECT_IS_TOP_LEVEL)
-    # Set target specific directories
-    set_target_properties(
-      ${PROJECT_NAME}
-      PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/cmd/lib"
-                 LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/cmd/lib")
-  endif() # PROJECT_IS_TOP_LEVEL
-
-  # vcpkg dependencies
-  find_package(uriparser CONFIG REQUIRED)
-  find_package(unofficial-libargon2 CONFIG REQUIRED)
-  find_package(unofficial-pcre CONFIG REQUIRED)
-
   # Include directories
   target_include_directories(
     ${PROJECT_NAME} PUBLIC "${PROJECT_SOURCE_DIR}"
                            "${PROJECT_SOURCE_DIR}/include")
+
+  # Find dependencies (vcpkg or system)
+  find_package(uriparser CONFIG REQUIRED)
+  find_package(unofficial-libargon2 CONFIG REQUIRED)
+  find_package(unofficial-pcre CONFIG REQUIRED)
 
   # Define static libraries for linking
   set(static_libs
@@ -68,11 +65,6 @@ if(UTILITYC_BUILD_TEST)
 
   # Add Test Target
   add_executable(${PROJECT_NAME}-test)
-
-  # Set target specific directories
-  set_target_properties(
-    ${PROJECT_NAME}-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY
-                                    "${PROJECT_SOURCE_DIR}/cmd/bin")
 
   # Link the static libraries to this target
   target_link_libraries(${PROJECT_NAME}-test GTest::gmock GTest::gtest
