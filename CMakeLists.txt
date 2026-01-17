@@ -45,10 +45,11 @@ if(UTILITYC_BUILD_LIB)
     ${PROJECT_NAME} PUBLIC "${PROJECT_SOURCE_DIR}"
                            "${PROJECT_SOURCE_DIR}/include")
 
-  # Find dependencies (vcpkg or system)
-  find_package(uriparser CONFIG REQUIRED)
-  find_package(unofficial-libargon2 CONFIG REQUIRED)
-  find_package(unofficial-pcre CONFIG REQUIRED)
+  # Find dependencies using meta_utils
+  include(meta_utils)
+  meta_find_packages(
+    PACKAGES uriparser unofficial-libargon2 unofficial-pcre
+    CONFIG REQUIRED)
 
   # Define static libraries for linking
   set(static_libs
