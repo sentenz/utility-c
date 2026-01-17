@@ -83,3 +83,6 @@ bin/
 
 # vcpkg
 tools/vcpkg/
+
+# Build directories
+build/
