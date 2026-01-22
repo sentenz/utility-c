@@ -1,52 +1,147 @@
-// SPDX-License-Identifier: Apache-2.0
+#include <gtest/gtest.h>
 
-#include "utility-c/regex.h"
+#include <memory>
+#include <string>
+#include <vector>
 
-#include "gtest/gtest.h"
+#include "utility-c/utils/regex.h"
 
-TEST(regex, match) {
-  // TODO(Sentenz) Create unit tests for os functions
-  GTEST_SKIP();
-  typedef struct s_test {
-    char *in[2];
-    int want;
-    int got;
-  } test_t;
+TEST(RegexTest, Match)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *pattern;
+      const char *str;
+    } in;
+    struct Want
+    {
+      bool expected;
+    } want;
+  };
 
-  test_t test[3] = {
-      {.in = {"^[a-zA-Z0-9]*$", "Teststring123"}, .want = 0},  // check if it an alphanumeric
-      {.in   = {"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?"
-                  "[0-9][0-9]?)$",
-                "192.168.0.200"},
-       .want = 0},  // check if it is an IPv4 address
-      {.in   = {"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?"
-                  "[0-9][0-9]?)$",
-                "192.168.0.256"},
-       .want = -1}};  // check if it is an IPv4 address
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"simple-match", {"abc", "abc"}, true},
+    {"simple-no-match", {"abc", "ab"}, false},
+    {"digits-match", {"[0-9]+", "12345"}, true},
+    {"digits-no-match", {"[0-9]+", "abc"}, false},
+    {"word-boundary", {"foo", "bar foo baz"}, true},
+    {"empty-pattern", {"", ""}, true},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = regex_match(test[i].in[0], test[i].in[1]);
-    EXPECT_EQ(test[i].got, test[i].want);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    bool got = regex_match(tc.in.pattern, tc.in.str);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.expected);
   }
 }
 
-TEST(regex, selectStringBetweenPatterns) {
-  typedef struct s_test {
-    char *in[3];
-    char *want;
-    char *got;
-  } test_t;
+TEST(RegexTest, Find)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *pattern;
+      const char *str;
+    } in;
+    struct Want
+    {
+      const char *expected;
+    } want;
+  };
 
-  test_t test[3] = {{.in   = {"this is 192.168.0.200 my IP Address", "this is ", "my IP Address"},
-                     .want = "192.168.0.200 "},
-                    {.in   = {"i have dev-container-001 as a Hostname ", "i have", "as a Hostname"},
-                     .want = " dev-container-001 "},
-                    // FIXME test not working (arithmetic operators need \)
-                    {.in = {"7!+cos(pi)*2=5042", "7!+", "*2=5042"}, .want = NULL}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"find-digits", {"[0-9]+", "abc123def"}, {"123"}},
+    {"find-word", {"foo", "bar foo baz"}, {"foo"}},
+    {"find-prefix", {"^abc", "abcdef"}, {"abc"}},
+    {"no-match", {"xyz", "abcdef"}, {NULL}},
+    {"empty-string", {"abc", ""}, {NULL}},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = regex_selectStringBetweenPatterns(test[i].in[0], test[i].in[1], test[i].in[2]);
-    EXPECT_STREQ(test[i].got, test[i].want);
-    free(test[i].got);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    std::unique_ptr<char, decltype(&free)> got(regex_find(tc.in.pattern, tc.in.str), free);
+
+    // Assert
+    if (tc.want.expected == NULL)
+    {
+      EXPECT_EQ(got.get(), nullptr);
+    }
+    else
+    {
+      ASSERT_NE(got.get(), nullptr);
+      EXPECT_STREQ(got.get(), tc.want.expected);
+    }
+  }
+}
+
+TEST(RegexTest, Between)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *str;
+      const char *left;
+      const char *right;
+    } in;
+    struct Want
+    {
+      const char *expected;
+    } want;
+  };
+
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"simple-between", {"start middle end", "start ", " end"}, {"middle"}},
+    {"no-left", {"middle end", "start ", " end"}, {NULL}},
+    {"no-right", {"start middle", "start ", " end"}, {NULL}},
+    {"empty-between", {"start  end", "start ", " end"}, {""}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    std::unique_ptr<char, decltype(&free)> got(regex_between(tc.in.str, tc.in.left, tc.in.right), free);
+
+    // Assert
+    if (tc.want.expected == NULL)
+    {
+      EXPECT_EQ(got.get(), nullptr);
+    }
+    else
+    {
+      ASSERT_NE(got.get(), nullptr);
+      EXPECT_STREQ(got.get(), tc.want.expected);
+    }
   }
 }

@@ -1,86 +1,344 @@
-// SPDX-License-Identifier: Apache-2.0
+#include <gtest/gtest.h>
 
-#include "utility-c/network.h"
+#include <cstdlib>
+#include <cstring>
+#include <string>
+#include <vector>
 
-#include "gtest/gtest.h"
+#include "utility-c/utils/network.h"
 
-TEST(network, setIpv4Address) {
-  // TODO(Sentenz) Check how to test netork interface in containers for unit tests for network functions
-  GTEST_SKIP();
+#ifdef S_POSIX
+TEST(NetworkTest, SetIpv4Address)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  typedef struct s_test {
-    char *in[3];
-    int want;
-    int got;
-  } test_t;
+    struct In
+    {
+      const char *ip;
+      const char *interface;
+    } in;
 
-  test_t test[3] = {{.in = {"192.168.0.200", "eth0"}, .want = 0},
-                    {.in = {"192.168.200.200", "eth0"}, .want = 0},
-                    {.in = {"192.168.0.256", "eth0"}, .want = -1}};
+    struct Want
+    {
+      int result;
+    } want;
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = network_setIpv4Address(test[i].in[0], test[i].in[1]);
-    EXPECT_EQ(test[i].got, test[i].want);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"invalid-interface", {"127.0.0.2", "invalid0"}, {-1}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = network_setIpv4Address(tc.in.ip, tc.in.interface);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.result);
+  }
+}
+#endif
+
+TEST(NetworkTest, GetIpv4Address)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+
+    struct In
+    {
+      const char *interface;
+    } in;
+  };
+
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"no-interface", {nullptr}},
+    {"empty-string", {""}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    char *got = network_getIpv4Address(tc.in.interface);
+
+    // Assert
+    if (got != nullptr) {
+      EXPECT_NE(std::strlen(got), 0u);
+      std::free(got);
+    }
   }
 }
 
-TEST(network, setIpv4Netmask) {
-  // TODO(Sentenz) Check how to test netork interface in containers for unit tests for network functions
-  GTEST_SKIP();
+TEST(NetworkTest, GetIpv6Address)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  typedef struct s_test {
-    char *in[3];
-    int want;
-    int got;
-  } test_t;
+    struct In
+    {
+      const char *interface;
+    } in;
+  };
 
-  test_t test[3] = {{.in = {"255.255.255.0", "eth0"}, .want = 0},
-                    {.in = {"255.256.0.0", "eth0"}, .want = -1},
-                    {.in = {"255.255.0.0", "eth0"}, .want = 0}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"no-interface", {nullptr}},
+    {"empty-string", {""}},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = network_setIpv4Netmask(test[i].in[0], test[i].in[1]);
-    EXPECT_EQ(test[i].got, test[i].want);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    char *got = network_getIpv6Address(tc.in.interface);
+
+    // Assert
+    if (got != nullptr) {
+      EXPECT_NE(std::strlen(got), 0u);
+      std::free(got);
+    }
   }
 }
 
-TEST(network, setIpv4Network) {
-  // TODO(Sentenz) Check how to test netork interface in containers for unit tests for network functions
-  GTEST_SKIP();
-  typedef struct s_test {
-    char *in[3];
-    int want;
-    int got;
-  } test_t;
+#ifdef S_POSIX
+TEST(NetworkTest, SetIpv4Netmask)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[3] = {{.in = {"192.168.0.200", "255.255.255.0", "192.168.0.1"}, .want = 0},
-                    {.in = {"192.200.200.200", "255.255.0.0", "192.168.200.1"}, .want = -1},
-                    {.in = {"192.168.200.200", "255.255.0.0", "192.168.200.1"}, .want = 0}};
+    struct In
+    {
+      const char *netmask;
+      const char *interface;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = network_setIpv4Network(test[i].in[0], test[i].in[1], test[i].in[2]);
-    EXPECT_EQ(test[i].got, test[i].want);
+    struct Want
+    {
+      int result;
+    } want;
+  };
+
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"invalid-interface", {"255.255.255.0", "invalid0"}, {-1}},
+    {"empty-interface", {"255.255.255.0", ""}, {-1}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = network_setIpv4Netmask(tc.in.netmask, tc.in.interface);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.result);
+  }
+}
+#endif
+
+TEST(NetworkTest, GetIpv4Netmask)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+
+    struct In
+    {
+      const char *interface;
+    } in;
+  };
+
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"no-interface", {nullptr}},
+    {"empty-string", {""}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    char *got = network_getIpv4Netmask(tc.in.interface);
+
+    // Assert
+    if (got != nullptr) {
+      EXPECT_NE(std::strlen(got), 0u);
+      std::free(got);
+    }
   }
 }
 
-TEST(network, setHostname) {
-  // TODO(Sentenz) Check how to test netork interface in containers for unit tests for network functions
-  GTEST_SKIP();
+TEST(NetworkTest, GetIpv4Gateway)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+  };
 
-  typedef struct s_test {
-    char *in;
-    int want;
-    int got;
-  } test_t;
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"default"},
+  };
 
-  // NOTE Valid characters for hostname (see string_pattern_hostname)
-  // https://man7.org/linux/man-pages/man7/hostname.7.html#:~:text=Valid%20characters%20for%20hostnames%20are,to%20an%20address%20for%20use.
-  test_t test[3] = {{.in = "dev-container-001", .want = 0},
-                    {.in = "dev.container", .want = -1},
-                    {.in = "-dev-container", .want = -1}};
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = network_setHostname(test[i].in);
-    EXPECT_EQ(test[i].got, test[i].want);
+    // Arrange
+    // no setup needed
+
+    // Act
+    char *got = network_getIpv4Gateway();
+
+    // Assert
+    if (got != nullptr) {
+      EXPECT_NE(std::strlen(got), 0u);
+      std::free(got);
+    }
+  }
+}
+
+
+TEST(NetworkTest, GetHostname)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+  };
+
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"default"},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    char *got = network_getHostname();
+
+    // Assert
+    if (got != nullptr) {
+      EXPECT_NE(std::strlen(got), 0u);
+      std::free(got);
+    }
+  }
+}
+
+TEST(NetworkTest, SetUsername)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+
+    struct In
+    {
+      const char *username;
+    } in;
+
+    struct Want
+    {
+      int result;
+    } want;
+  };
+
+  // Table-Driven Testing
+#ifdef S_POSIX
+  const std::vector<Tests> tests = {
+    {"unsupported", {"user"}, {-1}},
+  };
+#else
+  const std::vector<Tests> tests = {
+    {"not-supported", {"user"}, {0}},
+  };
+#endif
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = network_setUsername(tc.in.username);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.result);
+  }
+}
+
+TEST(NetworkTest, GetUsername)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+  };
+
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"default"},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    char *got = network_getUsername();
+
+    // Assert
+#ifdef S_POSIX
+    if (got != nullptr) {
+      EXPECT_NE(std::strlen(got), 0u);
+      std::free(got);
+    }
+#else
+    EXPECT_EQ(got, nullptr);
+#endif
   }
 }

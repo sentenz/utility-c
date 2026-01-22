@@ -1,149 +1,345 @@
-// SPDX-License-Identifier: Apache-2.0
+#include <gtest/gtest.h>
 
-#include "utility-c/util.h"
+#include <vector>
+#include <string>
+#include <cmath>
 
-#include "gtest/gtest.h"
+#include "utility-c/utils/util.h"
 
-TEST(util, isFloat) {
-  typedef struct s_test {
-    double in;
-    bool want;
-    bool got;
-  } test_t;
+TEST(UtilTest, IsFloat)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      double n;
+    } in;
+    struct Want
+    {
+      bool expected;
+    } want;
+  };
 
-  test_t test[6] = {{.in = 0.000, .want = false},
-                    {.in = 3.14159, .want = true},
-                    {.in = -3.14159, .want = true},
-                    {.in = 11235, .want = false},
-                    {.in = -11235, .want = false},
-                    {.in = 11235813, .want = false}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"integer-zero", {0.0}, false},
+    {"integer-positive", {5.0}, false},
+    {"integer-negative", {-3.0}, false},
+    {"float-positive", {3.14}, true},
+    {"float-negative", {-2.5}, true},
+    {"float-small", {0.001}, true},
+    {"large-integer", {1000000.0}, false},
+    {"large-float", {1000000.123}, true},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = util_isFloat(test[i].in);
-    EXPECT_EQ(test[i].got, test[i].want);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    bool got = util_isFloat(tc.in.n);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.expected);
   }
 }
 
-TEST(util, countDigits) {
-  typedef struct s_test {
-    int in;
-    int want;
-    int got;
-  } test_t;
+TEST(UtilTest, CountDigits)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      int n;
+    } in;
+    struct Want
+    {
+      int expected;
+    } want;
+  };
 
-  test_t test[4] = {{.in = 0, .want = 1},
-                    {.in = 11235, .want = 5},
-                    {.in = -11235, .want = 5},
-                    {.in = 11235813, .want = 8}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"zero", {0}, 1},
+    {"single-digit", {5}, 1},
+    {"two-digits", {42}, 2},
+    {"three-digits", {123}, 3},
+    {"negative-two-digits", {-56}, 2},
+    {"large-number", {123456789}, 9},
+    {"max-int", {2147483647}, 10},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = util_countDigits(test[i].in);
-    EXPECT_EQ(test[i].got, test[i].want);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    int got = util_countDigits(tc.in.n);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.expected);
   }
 }
 
-TEST(util, countFloat) {
-  typedef struct s_test {
-    double in;
-    int want;
-    int got;
-  } test_t;
+TEST(UtilTest, CountFloat)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      double n;
+    } in;
+    struct Want
+    {
+      int expected;
+    } want;
+  };
 
-  test_t test[5] = {{.in = 0.000, .want = 0},
-                    {.in = 333, .want = 0},
-                    {.in = 0.00001, .want = 6},
-                    {.in = 3.14159, .want = 6},
-                    {.in = -3.14159, .want = 6}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"one-decimal", {3.1}, 2},
+    {"two-decimals", {3.14}, 3},
+    {"three-decimals", {3.141}, 4},
+    {"negative-float", {-2.5}, 2},
+    {"small-float", {0.001}, 4},
+    {"trailing-zero", {1.100}, 2},
+    {"many-decimals", {3.14159265}, 9},
+    {"integer-input", {5.0}, 0},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = util_countFloat(test[i].in);
-    EXPECT_EQ(test[i].got, test[i].want);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    int got = util_countFloat(tc.in.n);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.expected);
   }
 }
 
-TEST(util, countNumber) {
-  typedef struct s_test {
-    double in;
-    int want;
-    int got;
-  } test_t;
+TEST(UtilTest, CountNumber)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      double n;
+    } in;
+    struct Want
+    {
+      int expected;
+    } want;
+  };
 
-  test_t test[5] = {{.in = 0.000, .want = 1},
-                    {.in = 333, .want = 3},
-                    {.in = 0.00001, .want = 6},
-                    {.in = 3.14159, .want = 6},
-                    {.in = -3.14159, .want = 6}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"integer-zero", {0.0}, 1},
+    {"integer-positive", {5.0}, 1},
+    {"float-one-decimal", {3.1}, 2},
+    {"float-two-decimals", {3.14}, 3},
+    {"negative-integer", {-56.0}, 2},
+    {"negative-float", {-2.5}, 2},
+    {"large-integer", {12345.0}, 5},
+    {"large-float", {123.123}, 4},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = util_countNumber(test[i].in);
-    EXPECT_EQ(test[i].got, test[i].want);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    int got = util_countNumber(tc.in.n);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.expected);
   }
 }
 
-TEST(util, approximatelyEqual) {
-  typedef struct s_test {
-    float in[3];
-    bool want;
-    bool got;
-  } test_t;
+TEST(UtilTest, ApproximatelyEqual)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      float a;
+      float b;
+      float epsilon;
+    } in;
+    struct Want
+    {
+      bool expected;
+    } want;
+  };
 
-  test_t test[3] = {{.in = {95.0, 100.0, 0.05}, .want = true},
-                    {.in = {94.9, 100.0, 0.05}, .want = false},
-                    {.in = {10.0, 20.0, 0.5}, .want = true}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"equal", {1.0f, 1.0f, 0.01f}, true},
+    {"close", {1.0f, 1.001f, 0.01f}, true},
+    {"not-close", {1.0f, 1.1f, 0.01f}, false},
+    {"negative-equal", {-1.0f, -1.0f, 0.01f}, true},
+    {"negative-close", {-1.0f, -1.001f, 0.01f}, true},
+    {"zero-epsilon", {1.0f, 1.0001f, 0.0f}, false},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = util_approximatelyEqual(test[i].in[0], test[i].in[1], test[i].in[2]);
-    EXPECT_EQ(test[i].got, test[i].want);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    bool got = util_approximatelyEqual(tc.in.a, tc.in.b, tc.in.epsilon);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.expected);
   }
 }
 
-TEST(util, essentiallyEqual) {
-  typedef struct s_test {
-    float in[3];
-    bool want;
-    bool got;
-  } test_t;
+TEST(UtilTest, EssentiallyEqual)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      float a;
+      float b;
+      float epsilon;
+    } in;
+    struct Want
+    {
+      bool expected;
+    } want;
+  };
 
-  test_t test[3] = {{.in = {95.0, 100.0, 0.05}, .want = false},
-                    {.in = {95.5, 100.0, 0.05}, .want = true},
-                    {.in = {10.1, 15.1, 0.5}, .want = true}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"equal", {1.0f, 1.0f, 0.01f}, true},
+    {"close", {1.0f, 1.001f, 0.01f}, true},
+    {"not-close", {1.0f, 1.1f, 0.01f}, false},
+    {"negative-equal", {-1.0f, -1.0f, 0.01f}, true},
+    {"large-numbers", {1000.0f, 1000.1f, 0.001f}, true},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = util_essentiallyEqual(test[i].in[0], test[i].in[1], test[i].in[2]);
-    EXPECT_EQ(test[i].got, test[i].want);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    bool got = util_essentiallyEqual(tc.in.a, tc.in.b, tc.in.epsilon);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.expected);
   }
 }
 
-TEST(util, definitelyGreaterThan) {
-  typedef struct s_test {
-    float in[3];
-    bool want;
-    bool got;
-  } test_t;
+TEST(UtilTest, DefinitelyGreaterThan)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      float a;
+      float b;
+      float epsilon;
+    } in;
+    struct Want
+    {
+      bool expected;
+    } want;
+  };
 
-  test_t test[3] = {{.in = {100.0, 94.9, 0.05}, .want = true},
-                    {.in = {100.0, 95.0, 0.05}, .want = false},
-                    {.in = {100, 49.9, 0.5}, .want = true}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"clearly-greater", {1.1f, 1.0f, 0.01f}, true},
+    {"not-greater", {1.001f, 1.0f, 0.01f}, false},
+    {"equal", {1.0f, 1.0f, 0.01f}, false},
+    {"negative-greater", {-1.0f, -1.1f, 0.01f}, true},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = util_definitelyGreaterThan(test[i].in[0], test[i].in[1], test[i].in[2]);
-    EXPECT_EQ(test[i].got, test[i].want);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    bool got = util_definitelyGreaterThan(tc.in.a, tc.in.b, tc.in.epsilon);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.expected);
   }
 }
 
-TEST(util, definitelyLessThan) {
-  typedef struct s_test {
-    float in[3];
-    bool want;
-    bool got;
-  } test_t;
+TEST(UtilTest, DefinitelyLessThan)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      float a;
+      float b;
+      float epsilon;
+    } in;
+    struct Want
+    {
+      bool expected;
+    } want;
+  };
 
-  test_t test[3] = {{.in = {94.9, 100.0, 0.05}, .want = true},
-                    {.in = {95.0, 100.0, 0.05}, .want = false},
-                    {.in = {24.9, 50.0, 0.5}, .want = true}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"clearly-less", {0.9f, 1.0f, 0.01f}, true},
+    {"not-less", {1.001f, 1.0f, 0.01f}, false},
+    {"equal", {1.0f, 1.0f, 0.01f}, false},
+    {"negative-less", {-1.1f, -1.0f, 0.01f}, true},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = util_definitelyLessThan(test[i].in[0], test[i].in[1], test[i].in[2]);
-    EXPECT_EQ(test[i].got, test[i].want);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    bool got = util_definitelyLessThan(tc.in.a, tc.in.b, tc.in.epsilon);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.expected);
   }
 }

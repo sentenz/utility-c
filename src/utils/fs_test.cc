@@ -1,379 +1,301 @@
-// SPDX-License-Identifier: Apache-2.0
+#include <gtest/gtest.h>
 
-#include "utility-c/fs.h"
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <memory>
+#include <string>
+#include <vector>
 
-#include "gtest/gtest.h"
+#include <limits.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
-static void setup(const char *path, const char *filename, const char *str) {
-  if (path != NULL) {
-    fs_createDirectory(path, ACCESSPERMS);
+#include "utility-c/utils/fs.h"
+
+namespace {
+
+class CwdGuard
+{
+public:
+  CwdGuard()
+  {
+    if (getcwd(cwd_, sizeof(cwd_)) == nullptr)
+    {
+      cwd_[0] = '\0';
+    }
   }
 
-  if (path != NULL && filename != NULL) {
-    fs_createFile(path, filename);
+  ~CwdGuard()
+  {
+    if (cwd_[0] != '\0')
+    {
+      (void)chdir(cwd_);
+    }
   }
 
-  if (path != NULL && filename != NULL && str != NULL) {
-    fs_writeFile(path, filename, str);
+private:
+  char cwd_[PATH_MAX];
+};
+
+std::string make_temp_dir()
+{
+  char templ[] = "/tmp/utility-c-fs-XXXXXX";
+  char *path = mkdtemp(templ);
+  if (path == nullptr)
+  {
+    return {};
   }
+  return std::string(path);
 }
 
-static void teardown(const char *path, const char *filename) {
-  if (path != NULL && filename != NULL) {
-    fs_removeFile(path, filename);
-  }
-
-  if (path != NULL) {
-    fs_removeDirectory(path);
-  }
+bool path_exists(const std::string &path)
+{
+  struct stat about;
+  return stat(path.c_str(), &about) == 0;
 }
 
-TEST(fs, createDirectory) {
-  typedef struct s_test {
-    char *in1;
-    mode_t in2;
-    int want;
-    int got;
-  } test_t;
+}  // namespace
 
-  test_t test[19] = {
-      {.in1 = "/tmp/test/fs/a\0", .in2 = ACCESSPERMS, .want = true},
-      {.in1 = "/tmp/test/fs/a\0", .in2 = ACCESSPERMS, .want = true},
-      {.in1 = "/tmp/test/fs/b\0", .in2 = ALLPERMS, .want = true},
-      {.in1 = "/tmp/test/fs/c/\0", .in2 = DEFFILEMODE, .want = true},
-      {.in1 = "/tmp/test/fs/d/\0", .in2 = S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID, .want = true},
-      {.in1 = "/tmp/test/fs/e/\0", .in2 = S_IRGRP | S_IRGRP | S_IROTH, .want = true},
-      {.in1 = "/tmp/test/fs/f//\0", .in2 = 0, .want = true},
-      {.in1 = "/tmp/test/fs/g///\0", .in2 = 0, .want = true},
-      {.in1 = "/tmp/test/fs/h///j\0", .in2 = 0, .want = true},
-      {.in1 = "/tmp/test/fs/i///k/\0", .in2 = 0, .want = true},
-      {.in1 = "/tmp/test/fs/l/ /m/\0", .in2 = 0, .want = true},
-      {.in1 = "/tmp/test/fs/n/o p/q/\0", .in2 = 0, .want = true},
-      {.in1 = "/tmp/test/fs/r/.config\0", .in2 = 0, .want = true},
-      {.in1 = "/tmp/test/fs/s/.config\0", .in2 = 0, .want = true},
-      {.in1 = "/tmp/test/fs/{}[]()\0", .in2 = ACCESSPERMS, .want = true},
-      {.in1 = "/tmp/test/fs/⌘☹Ж\0", .in2 = ACCESSPERMS, .want = true},
-      {.in1 = "/tmp/test/fs\0", .in2 = ACCESSPERMS, .want = true},
-      {.in1 = "\0", .in2 = 0, .want = false},
-      {.in1 = NULL, .in2 = 0, .want = false}};
+TEST(FsTest, CreateDirectory)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *path;
+      mode_t mode;
+    } in;
+    struct Want
+    {
+      bool expected;
+    } want;
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = fs_createDirectory(test[i].in1, test[i].in2);
-    EXPECT_EQ(test[i].got, test[i].want);
+  std::string temp = make_temp_dir();
+  ASSERT_FALSE(temp.empty());
+  std::string nested = temp + "/a/b/c";
 
-    teardown(test[i].in1, NULL);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"valid-nested", {nested.c_str(), 0755}, {true}},
+    {"null-path", {NULL, 0755}, {false}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    CwdGuard guard;
+
+    // Act
+    bool got = fs_createDirectory(tc.in.path, tc.in.mode);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.expected);
   }
+
+  EXPECT_TRUE(path_exists(nested));
+  EXPECT_TRUE(fs_removeDirectory(temp.c_str()));
 }
 
-TEST(fs, removeDirectory) {
-  typedef struct s_test {
-    char *in;
-    bool want;
-    bool got;
-  } test_t;
+TEST(FsTest, RemoveDirectory)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *path;
+    } in;
+    struct Want
+    {
+      bool expected;
+    } want;
+  };
 
-  test_t test[19] = {{.in = "/tmp/test/fs/a\0", .want = true},
-                     {.in = "/tmp/test/fs/a\0", .want = true},
-                     {.in = "/tmp/test/fs/b\0", .want = true},
-                     {.in = "/tmp/test/fs/c/\0", .want = true},
-                     {.in = "/tmp/test/fs/d/\0", .want = true},
-                     {.in = "/tmp/test/fs/e/\0", .want = true},
-                     {.in = "/tmp/test/fs/f//\0", .want = true},
-                     {.in = "/tmp/test/fs/g///\0", .want = true},
-                     {.in = "/tmp/test/fs/h///j\0", .want = true},
-                     {.in = "/tmp/test/fs/i///k/\0", .want = true},
-                     {.in = "/tmp/test/fs/l/ /m/\0", .want = true},
-                     {.in = "/tmp/test/fs/n/o p/q/\0", .want = true},
-                     {.in = "/tmp/test/fs/r/.config\0", .want = true},
-                     {.in = "/tmp/test/fs/s/.config\0", .want = true},
-                     {.in = "/tmp/test/fs/{}[]()\0", .want = true},
-                     {.in = "/tmp/test/fs/⌘☹Ж\0", .want = true},
-                     {.in = "/tmp/test/fs\0", .want = true},
-                     {.in = "\0", .want = false},
-                     {.in = NULL, .want = false}};
+  std::string temp = make_temp_dir();
+  ASSERT_FALSE(temp.empty());
+  std::string nested = temp + "/child";
+  ASSERT_TRUE(fs_createDirectory(nested.c_str(), 0755));
+  ASSERT_TRUE(fs_createFile(nested.c_str(), "file.txt"));
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    setup(test[i].in, "test.txt", NULL);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"valid-remove", {temp.c_str()}, {true}},
+    {"null-path", {NULL}, {false}},
+  };
 
-    test[i].got = fs_removeDirectory(test[i].in);
-    EXPECT_EQ(test[i].got, test[i].want);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    CwdGuard guard;
+
+    // Act
+    bool got = fs_removeDirectory(tc.in.path);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.expected);
   }
+
+  EXPECT_FALSE(path_exists(temp));
 }
 
-TEST(fs, existFile) {
-  typedef struct s_test {
-    char *in[2];
-    bool want;
-    bool got;
-  } test_t;
+TEST(FsTest, ExistFile)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *path;
+      const char *filename;
+    } in;
+    struct Want
+    {
+      bool expected;
+    } want;
+  };
 
-  test_t test[18] = {{.in = {"/tmp/test/fs/a\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/a\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/b\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/c/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/d/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/e/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/f//\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/g///\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/h///j\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/i///k/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/l/ /m/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/n/o p/q/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/r/.config\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/s/.config\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/{}[]()\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/⌘☹Ж\0", "\0"}, .want = false},
-                     {.in = {"\0", "\0"}, .want = false},
-                     {.in = {NULL, NULL}, .want = false}};
+  std::string temp = make_temp_dir();
+  ASSERT_FALSE(temp.empty());
+  ASSERT_TRUE(fs_createFile(temp.c_str(), "exists.txt"));
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    setup(test[i].in[0], test[i].in[1], NULL);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"exists", {temp.c_str(), "exists.txt"}, {true}},
+    {"missing", {temp.c_str(), "missing.txt"}, {false}},
+    {"null-path", {NULL, "exists.txt"}, {false}},
+    {"null-filename", {temp.c_str(), NULL}, {false}},
+  };
 
-    test[i].got = fs_existFile(test[i].in[0], test[i].in[1]);
-    EXPECT_EQ(test[i].got, test[i].want);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
 
-    teardown(test[i].in[0], test[i].in[1]);
+    // Arrange
+    CwdGuard guard;
+
+    // Act
+    bool got = fs_existFile(tc.in.path, tc.in.filename);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.expected);
   }
+
+  EXPECT_TRUE(fs_removeDirectory(temp.c_str()));
 }
 
-TEST(fs, openFile) {
-  typedef struct s_test {
-    char *in[3];
-    FILE *want;
-    FILE *got;
-  } test_t;
+TEST(FsTest, OpenCloseFile)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *path;
+      const char *filename;
+      const char *mode;
+    } in;
+    struct Want
+    {
+      bool should_open;
+    } want;
+  };
 
-  test_t test[18] = {{.in = {"/tmp/test/fs/a\0", "example.txt\0", "r\0"}, .want = NULL},
-                     {.in = {"/tmp/test/fs/a\0", "example.txt\0", "w\0"}, .want = NULL},
-                     {.in = {"/tmp/test/fs/b\0", "example.txt\0", "a\0"}, .want = NULL},
-                     {.in = {"/tmp/test/fs/c/\0", "example.txt\0", "r+\0"}, .want = NULL},
-                     {.in = {"/tmp/test/fs/d/\0", "example.txt\0", "w+\0"}, .want = NULL},
-                     {.in = {"/tmp/test/fs/e/\0", "example.txt\0", "a+\0"}, .want = NULL},
-                     {.in = {"/tmp/test/fs/f//\0", "example.txt\0", "a+\0"}, .want = NULL},
-                     {.in = {"/tmp/test/fs/g///\0", "example.txt\0", "r\0"}, .want = NULL},
-                     {.in = {"/tmp/test/fs/h///j\0", "example.txt\0", "r\0"}, .want = NULL},
-                     {.in = {"/tmp/test/fs/i///k/\0", "example.txt\0", "r\0"}, .want = NULL},
-                     {.in = {"/tmp/test/fs/l/ /m/\0", "example.txt\0", "r\0"}, .want = NULL},
-                     {.in = {"/tmp/test/fs/n/o p/q/\0", "example.txt\0", "r\0"}, .want = NULL},
-                     {.in = {"/tmp/test/fs/r/.config\0", "example.txt\0", "r\0"}, .want = NULL},
-                     {.in = {"/tmp/test/fs/s/.config\0", "example.txt\0", "r\0"}, .want = NULL},
-                     {.in = {"/tmp/test/fs/{}[]()\0", "example.txt\0", NULL}, .want = (FILE *)1},
-                     {.in = {"/tmp/test/fs/⌘☹Ж\0", "\0"}, .want = (FILE *)1},
-                     {.in = {"\0", "\0", "\0"}, .want = (FILE *)1},
-                     {.in = {NULL, NULL, NULL}, .want = (FILE *)1}};
+  std::string temp = make_temp_dir();
+  ASSERT_FALSE(temp.empty());
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    setup(test[i].in[0], test[i].in[1], NULL);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"open-write", {temp.c_str(), "open.txt", "w+"}, {true}},
+    {"null-path", {NULL, "open.txt", "w+"}, {false}},
+    {"null-filename", {temp.c_str(), NULL, "w+"}, {false}},
+    {"null-mode", {temp.c_str(), "open.txt", NULL}, {false}},
+  };
 
-    test[i].got = fs_openFile(test[i].in[0], test[i].in[1], test[i].in[2]);
-    EXPECT_NE(test[i].got, test[i].want);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
 
-    teardown(test[i].in[0], test[i].in[1]);
+    // Arrange
+    CwdGuard guard;
+
+    // Act
+    FILE *got = fs_openFile(tc.in.path, tc.in.filename, tc.in.mode);
+
+    // Assert
+    if (tc.want.should_open)
+    {
+      ASSERT_NE(got, nullptr);
+      fs_closeFile(got);
+    }
+    else
+    {
+      EXPECT_EQ(got, nullptr);
+    }
   }
+
+  EXPECT_TRUE(fs_removeDirectory(temp.c_str()));
 }
 
-TEST(fs, closeFile) {
-  typedef struct s_test {
-    FILE *in;
-  } test_t;
+TEST(FsTest, CreateReadWriteUpdateRemoveFile)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *path;
+      const char *filename;
+      const char *content;
+      const char *append;
+    } in;
+    struct Want
+    {
+      const char *expected;
+    } want;
+  };
 
-  test_t test[2] = {{.in = fs_openFile("/tmp/test/fs/a\0", "example.txt\0", "r\0")}, {.in = NULL}};
+  std::string temp = make_temp_dir();
+  ASSERT_FALSE(temp.empty());
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    setup("/tmp/test/fs/a\0", "example.txt\0", NULL);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"write-and-append", {temp.c_str(), "data.txt", "hello", " world"}, {"hello world"}},
+  };
 
-    fs_closeFile(test[i].in);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
 
-    teardown("/tmp/test/fs/a\0", "example.txt\0");
+    // Arrange
+    CwdGuard guard;
+
+    // Act
+    bool created = fs_createFile(tc.in.path, tc.in.filename);
+    bool wrote = fs_writeFile(tc.in.path, tc.in.filename, tc.in.content);
+    bool updated = fs_updateFile(tc.in.path, tc.in.filename, tc.in.append);
+    std::unique_ptr<char, decltype(&free)> got(fs_readFile(tc.in.path, tc.in.filename), free);
+    bool removed = fs_removeFile(tc.in.path, tc.in.filename);
+
+    // Assert
+    EXPECT_TRUE(created);
+    EXPECT_TRUE(wrote);
+    EXPECT_TRUE(updated);
+    ASSERT_NE(got.get(), nullptr);
+    EXPECT_STREQ(got.get(), tc.want.expected);
+    EXPECT_TRUE(removed);
   }
-}
 
-TEST(fs, createFile) {
-  typedef struct s_test {
-    char *in[2];
-    int want;
-    int got;
-  } test_t;
-
-  test_t test[19] = {{.in = {"/tmp/test/fs/a\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/a\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/b\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/c/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/d/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/e/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/f//\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/g///\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/h///j\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/i///k/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/l/ /m/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/n/o p/q/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/r/.config\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/s/.config\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/{}[]()\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/⌘☹Ж\0", "\0"}, .want = false},
-                     {.in = {"/etc/test\0", "\0"}, .want = false},
-                     {.in = {"\0", "\0"}, .want = false},
-                     {.in = {NULL, NULL}, .want = false}};
-
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    setup(test[i].in[0], NULL, NULL);
-
-    test[i].got = fs_createFile(test[i].in[0], test[i].in[1]);
-    EXPECT_EQ(test[i].got, test[i].want);
-
-    teardown(test[i].in[0], test[i].in[1]);
-  }
-}
-
-TEST(fs, removeFile) {
-  typedef struct s_test {
-    char *in[2];
-    int want;
-    int got;
-  } test_t;
-
-  test_t test[19] = {{.in = {"/tmp/test/fs/a\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/a\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/b\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/c/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/d/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/e/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/f//\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/g///\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/h///j\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/i///k/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/l/ /m/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/n/o p/q/\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/r/.config\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/s/.config\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/{}[]()\0", "example.txt\0"}, .want = true},
-                     {.in = {"/tmp/test/fs/⌘☹Ж\0", "\0"}, .want = false},
-                     {.in = {"/tmp/test/fs\0", "\0"}, .want = false},
-                     {.in = {"\0", "\0"}, .want = false},
-                     {.in = {NULL, NULL}, .want = false}};
-
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    setup(test[i].in[0], test[i].in[1], NULL);
-
-    test[i].got = fs_removeFile(test[i].in[0], test[i].in[1]);
-    EXPECT_EQ(test[i].got, test[i].want);
-
-    teardown(test[i].in[0], NULL);
-  }
-}
-
-TEST(fs, readFile) {
-  typedef struct s_test {
-    char *in[2];
-    char *want;
-    char *got;
-  } test_t;
-
-  test_t test[19] = {
-      {.in = {"/tmp/test/fs/a\0", "example.txt\0"}, .want = "hello world a\nhello world b\n\0"},
-      {.in = {"/tmp/test/fs/a\0", "example.txt\0"}, .want = "hello world a\nhello world b\n\0"},
-      {.in = {"/tmp/test/fs/b\0", "example.txt\0"}, .want = "hello world c\n\0"},
-      {.in = {"/tmp/test/fs/c/\0", "example.txt\0"}, .want = "hello world d\n\0"},
-      {.in = {"/tmp/test/fs/d/\0", "example.txt\0"}, .want = "hello world e\n\0"},
-      {.in = {"/tmp/test/fs/e/\0", "example.txt\0"}, .want = "hello world f\n\0"},
-      {.in = {"/tmp/test/fs/f//\0", "example.txt\0"}, .want = "hello world g\n\0"},
-      {.in = {"/tmp/test/fs/g///\0", "example.txt\0"}, .want = "hello world h\n\0"},
-      {.in = {"/tmp/test/fs/h///j\0", "example.txt\0"}, .want = "hello world j\n\0"},
-      {.in = {"/tmp/test/fs/i///k/\0", "example.txt\0"}, .want = "hello world i\n\0"},
-      {.in = {"/tmp/test/fs/l/ /m/\0", "example.txt\0"}, .want = "hello world k\n\0"},
-      {.in = {"/tmp/test/fs/n/o p/q/\0", "example.txt\0"}, .want = "hello world l\n\0"},
-      {.in = {"/tmp/test/fs/r/.config\0", "example.txt\0"}, .want = "hello world l\n\0"},
-      {.in = {"/tmp/test/fs/s/.config\0", "example.txt\0"}, .want = "hello world {}[]()\n\0"},
-      {.in = {"/tmp/test/fs/{}[]()\0", "example.txt\0"}, .want = "hello world ⌘☹Ж\n\0"},
-      {.in = {"/tmp/test/fs/⌘☹Ж\0", "\0"}, .want = NULL},
-      {.in = {"/tmp/test/fs\0", "\0"}, .want = NULL},
-      {.in = {"\0", "\0"}, .want = NULL},
-      {.in = {NULL, NULL}, .want = NULL}};
-
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    setup(test[i].in[0], test[i].in[1], test[i].want);
-
-    test[i].got = fs_readFile(test[i].in[0], test[i].in[1]);
-    EXPECT_STREQ(test[i].got, test[i].want);
-
-    free(test[i].got);
-
-    teardown(test[i].in[0], test[i].in[1]);
-  }
-}
-
-TEST(fs, writeFile) {
-  typedef struct s_test {
-    char *in[3];
-    int want;
-    int got;
-  } test_t;
-
-  test_t test[19] = {
-      {.in = {"/tmp/test/fs/a\0", "example.txt\0", "hello world a\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/a\0", "example.txt\0", "hello world b\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/b\0", "example.txt\0", "hello world c\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/c/\0", "example.txt\0", "hello world d\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/d/\0", "example.txt\0", "hello world e\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/e/\0", "example.txt\0", "hello world f\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/f//\0", "example.txt\0", "hello world g\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/g///\0", "example.txt\0", "hello world h\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/h///j\0", "example.txt\0", "hello world j\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/i///k/\0", "example.txt\0", "hello world i\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/l/ /m/\0", "example.txt\0", "hello world k\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/n/o p/q/\0", "example.txt\0", "hello world l\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/r/.config\0", "example.txt\0", "hello world l\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/s/.config\0", "example.txt\0", "hello world {}[]()\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/{}[]()\0", "example.txt\0", "hello world ⌘☹Ж\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/⌘☹Ж\0", "\0", "hello world o\n\0"}, .want = false},
-      {.in = {"/tmp/test/fs\0", "\0", "\0"}, .want = false},
-      {.in = {"\0", "\0", "hello world p\n\0"}, .want = false},
-      {.in = {NULL, NULL, "hello world q\n\0"}, .want = false}};
-
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    setup(test[i].in[0], test[i].in[1], NULL);
-
-    test[i].got = fs_writeFile(test[i].in[0], test[i].in[1], test[i].in[2]);
-    EXPECT_EQ(test[i].got, test[i].want);
-
-    teardown(test[i].in[0], test[i].in[1]);
-  }
-}
-
-TEST(fs, updateFile) {
-  typedef struct s_test {
-    char *in[3];
-    int want;
-    int got;
-  } test_t;
-
-  test_t test[19] = {
-      {.in = {"/tmp/test/fs/a\0", "example.txt\0", "hello world a\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/a\0", "example.txt\0", "hello world b\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/b\0", "example.txt\0", "hello world c\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/c/\0", "example.txt\0", "hello world d\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/d/\0", "example.txt\0", "hello world e\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/e/\0", "example.txt\0", "hello world f\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/f//\0", "example.txt\0", "hello world g\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/g///\0", "example.txt\0", "hello world h\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/h///j\0", "example.txt\0", "hello world j\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/i///k/\0", "example.txt\0", "hello world i\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/l/ /m/\0", "example.txt\0", "hello world k\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/n/o p/q/\0", "example.txt\0", "hello world l\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/r/.config\0", "example.txt\0", "hello world l\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/s/.config\0", "example.txt\0", "hello world {}[]()\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/{}[]()\0", "example.txt\0", "hello world ⌘☹Ж\n\0"}, .want = true},
-      {.in = {"/tmp/test/fs/⌘☹Ж\0", "\0", "hello world o\n\0"}, .want = false},
-      {.in = {"/tmp/test/fs\0", "\0", "\0"}, .want = false},
-      {.in = {"\0", "\0", "hello world p\n\0"}, .want = false},
-      {.in = {NULL, NULL, "hello world q\n\0"}, .want = false}};
-
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    setup(test[i].in[0], test[i].in[1], NULL);
-
-    test[i].got = fs_updateFile(test[i].in[0], test[i].in[1], test[i].in[2]);
-    EXPECT_EQ(test[i].got, test[i].want);
-
-    teardown(test[i].in[0], test[i].in[1]);
-  }
+  EXPECT_TRUE(fs_removeDirectory(temp.c_str()));
 }

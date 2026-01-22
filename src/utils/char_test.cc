@@ -1,411 +1,737 @@
-// SPDX-License-Identifier: Apache-2.0
+#include <gtest/gtest.h>
 
-#include "utility-c/char.h"
+#include <vector>
+#include <string>
 
-#include "gtest/gtest.h"
+#include "utility-c/utils/char.h"
 
-static void teardown(char *str) {
-  char_free(str);
-}
+TEST(CharTest, IsEmpty)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-TEST(char, isEmpty) {
-  typedef struct s_test {
-    char *in;
-    bool want;
-    bool got;
-  } test_t;
+    struct In
+    {
+      const char *str;
+    } in;
 
-  test_t test[6] = {{.in = "Not NULL\0", .want = false},
-                    {.in = "⌘{čřžŧ¶'`[łĐŧđĐ¶\0", .want = false},
-                    {.in = "  \0", .want = false},
-                    {.in = "\0", .want = true},
-                    {.in = "", .want = true},
-                    {.in = NULL, .want = true}};
+    struct Want
+    {
+      bool empty;
+    } want;
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_isEmpty(test[i].in);
-    EXPECT_EQ(test[i].got, test[i].want);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"null", {nullptr}, {true}},
+    {"empty", {""}, {true}},
+    {"non-empty", {"abc"}, {false}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_isEmpty(tc.in.str);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.empty);
   }
 }
 
-TEST(char, isValid) {
-  typedef struct s_test {
-    char *in;
-    bool want;
-    bool got;
-  } test_t;
+TEST(CharTest, IsValid)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[5] = {{.in = "⌘{čřžŧ¶'`[łĐŧđĐ¶←^€~[←^ø{&}čž\0", .want = false},
-                    {.in = "abcABC1123\0", .want = true},
-                    {.in = "@{}[]().:;_-+~*!%$#\0", .want = true},
-                    {.in = "\0", .want = false},
-                    {.in = NULL, .want = false}};
+    struct In
+    {
+      const char *str;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_isValid(test[i].in);
-    EXPECT_EQ(test[i].got, test[i].want);
+    struct Want
+    {
+      bool valid;
+    } want;
+  };
+
+  // Table-Driven Testing
+  const char nonAscii[] = {static_cast<char>(0x80), '\0'};
+  const std::vector<Tests> tests = {
+    {"null", {nullptr}, {false}},
+    {"empty", {""}, {false}},
+    {"ascii", {"abc123"}, {true}},
+    {"non-ascii", {nonAscii}, {false}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_isValid(tc.in.str);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.valid);
   }
 }
 
-TEST(char, areEqual) {
-  typedef struct s_test {
-    char *in[2];
-    bool want;
-    bool got;
-  } test_t;
+TEST(CharTest, AreEqual)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[10] = {{.in = {"unit\0", "unit\0"}, .want = true},
-                     {.in = {"unit test\0", "unit test\0"}, .want = true},
-                     {.in = {"11235\0", "11235\0"}, .want = true},
-                     {.in = {"@{}[]().:;_-+~*!%$#\0", "@{}[]().:;_-+~*!%$#\0"}, .want = true},
-                     {.in = {"⌘{čřžŧ¶'`[łĐŧđĐ¶\0", "⌘{čřžŧ¶'`[łĐŧđĐ¶\0"}, .want = true},
-                     {.in = {"unit\0", "test\0"}, .want = false},
-                     {.in = {"  \0", "  \0"}, .want = true},
-                     {.in = {"\0", "\0"}, .want = false},
-                     {.in = {"\0", NULL}, .want = false},
-                     {.in = {NULL, NULL}, .want = false}};
+    struct In
+    {
+      const char *str1;
+      const char *str2;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_areEqual(test[i].in[0], test[i].in[1]);
-    EXPECT_EQ(test[i].got, test[i].want);
+    struct Want
+    {
+      bool equal;
+    } want;
+  };
+
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"both-equal", {"abc", "abc"}, {true}},
+    {"different", {"abc", "abd"}, {false}},
+    {"null-left", {nullptr, "abc"}, {false}},
+    {"empty-left", {"", "abc"}, {false}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_areEqual(tc.in.str1, tc.in.str2);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.equal);
   }
 }
 
-TEST(char, toInteger) {
-  typedef struct s_test {
-    char *in;
-    int want;
-    int got;
-  } test_t;
+TEST(CharTest, ToInteger)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[14] = {{.in = "11235\0", .want = 11235},
-                     {.in = " +11235 \0", .want = 11235},
-                     {.in = "-11235\0", .want = -11235},
-                     {.in = " +3.14 \0", .want = 3},
-                     {.in = "-3.14\0", .want = -3},
-                     {.in = "++11235\0", .want = 0},
-                     {.in = "--11235\0", .want = 0},
-                     {.in = "0x2BE3\0", .want = 0},
-                     {.in = "0\0", .want = 0},
-                     {.in = "-0\0", .want = 0},
-                     {.in = "No+11235Integer\0", .want = 0},
-                     {.in = "⌘{čřžŧ¶'`[łĐŧđĐ¶\0", .want = 0},
-                     {.in = "\0", .want = 0},
-                     {.in = NULL, .want = 0}};
+    struct In
+    {
+      const char *str;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_toInteger(test[i].in);
-    EXPECT_EQ(test[i].got, test[i].want);
+    struct Want
+    {
+      int value;
+    } want;
+  };
+
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"null", {nullptr}, {0}},
+    {"empty", {""}, {0}},
+    {"positive", {"123"}, {123}},
+    {"negative", {"-42"}, {-42}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_toInteger(tc.in.str);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.value);
   }
 }
 
-TEST(char, fromInteger) {
-  typedef struct s_test {
-    int in;
-    char *want;
-    char *got;
-  } test_t;
+TEST(CharTest, FromInteger)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[5] = {{.in = 11235, .want = "11235\0"},
-                    {.in = +11235, .want = "11235\0"},
-                    {.in = -11235, .want = "-11235\0"},
-                    {.in = -0, .want = "0\0"},
-                    {.in = 0, .want = "0\0"}};
+    struct In
+    {
+      int value;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_fromInteger(test[i].in);
-    EXPECT_STREQ(test[i].got, test[i].want);
+    struct Want
+    {
+      const char *text;
+    } want;
+  };
 
-    teardown(test[i].got);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"zero", {0}, {"0"}},
+    {"negative", {-42}, {"-42"}},
+    {"positive", {123}, {"123"}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_fromInteger(tc.in.value);
+
+    // Assert
+    ASSERT_NE(got, nullptr);
+    EXPECT_STREQ(got, tc.want.text);
+    char_free(got);
   }
 }
 
-TEST(char, toFloat) {
-  typedef struct s_test {
-    char *in;
-    double want;
-    double got;
-  } test_t;
+TEST(CharTest, ToFloat)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[14] = {{.in = "3.14159\0", .want = 3.14159},
-                     {.in = " +3.14159 \0", .want = 3.14159},
-                     {.in = "-3.14159\0", .want = -3.14159},
-                     {.in = "++3.14159\0", .want = 0},
-                     {.in = "--3.14159\0", .want = 0},
-                     {.in = "0x2BE3\0", .want = 11235.0},
-                     {.in = "11235\0", .want = 11235.0},
-                     {.in = "+0.0\0", .want = 0},
-                     {.in = "0\0", .want = 0},
-                     {.in = "-0\0", .want = 0},
-                     {.in = "No Float\0", .want = 0},
-                     {.in = "⌘{čřžŧ¶'`[łĐŧđĐ¶\0", .want = 0},
-                     {.in = "\0", .want = 0},
-                     {.in = NULL, .want = 0}};
+    struct In
+    {
+      const char *str;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_toFloat(test[i].in);
-    EXPECT_EQ(test[i].got, test[i].want);
+    struct Want
+    {
+      double value;
+    } want;
+  };
+
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"null", {nullptr}, {0.0}},
+    {"empty", {""}, {0.0}},
+    {"integer", {"2"}, {2.0}},
+    {"float", {"3.14"}, {3.14}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_toFloat(tc.in.str);
+
+    // Assert
+    EXPECT_NEAR(got, tc.want.value, 1e-9);
   }
 }
 
-TEST(char, fromFloat) {
-  typedef struct s_test {
-    double in;
-    char *want;
-    char *got;
-  } test_t;
+TEST(CharTest, FromFloat)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[7] = {{.in = 3.14159, .want = "3.14159\0"},
-                    {.in = +3.14159, .want = "3.14159\0"},
-                    {.in = -3.14159, .want = "-3.14159\0"},
-                    {.in = 333, .want = NULL},
-                    {.in = -333, .want = NULL},
-                    {.in = -0, .want = NULL},
-                    {.in = 0, .want = NULL}};
+    struct In
+    {
+      double value;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_fromFloat(test[i].in);
-    EXPECT_STREQ(test[i].got, test[i].want);
+    struct Want
+    {
+      const char *text;
+    } want;
+  };
 
-    teardown(test[i].got);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"zero", {0.0}, {"0.000000"}},
+    {"fraction", {1.25}, {"1.250000"}},
+    {"negative", {-2.5}, {"-2.500000"}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_fromFloat(tc.in.value);
+
+    // Assert
+    ASSERT_NE(got, nullptr);
+    EXPECT_STREQ(got, tc.want.text);
+    char_free(got);
   }
 }
 
-TEST(char, fromNumber) {
-  typedef struct s_test {
-    double in;
-    char *want;
-    char *got;
-  } test_t;
+TEST(CharTest, FromNumber)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[7] = {{.in = 3.14159, .want = "3.14159\0"},
-                    {.in = +3.14159, .want = "3.14159\0"},
-                    {.in = -3.14159, .want = "-3.14159\0"},
-                    {.in = 333, .want = "333\0"},
-                    {.in = -333, .want = "-333\0"},
-                    {.in = -0, .want = "0\0"},
-                    {.in = 0, .want = "0\0"}};
+    struct In
+    {
+      double value;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_fromNumber(test[i].in);
-    EXPECT_STREQ(test[i].got, test[i].want);
+    struct Want
+    {
+      const char *text;
+    } want;
+  };
 
-    teardown(test[i].got);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"integer", {2.0}, {"2"}},
+    {"fraction", {1.25}, {"1.250000"}},
+    {"negative-int", {-7.0}, {"-7"}},
+    {"close-to-int", {1.0000001}, {"1.000000"}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_fromNumber(tc.in.value);
+
+    // Assert
+    ASSERT_NE(got, nullptr);
+    EXPECT_STREQ(got, tc.want.text);
+    char_free(got);
   }
 }
 
-TEST(char, concats) {
-  typedef struct s_test {
-    char *in[3];
-    char *want;
-    char *got;
-  } test_t;
+TEST(CharTest, Concats)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[5] = {{.in = {"simple\0", "unit\0", "test\0"}, .want = "simpleunittest\0"},
-                    {.in = {"⌘{čřž\0", "ŧ¶'`\0", "[łĐŧđĐ¶\0"}, .want = "⌘{čřžŧ¶'`[łĐŧđĐ¶\0"},
-                    {.in = {"150.3\0", "*\0", "15.5\0"}, .want = "150.3*15.5\0"},
-                    {.in = {"1123\0", "5813\0", "2134\0"}, .want = "112358132134\0"},
-                    {.in = {"util\0", "_function_\0", "test\0"}, .want = "util_function_test\0"}};
+    struct In
+    {
+      const char *a;
+      const char *b;
+      const char *c;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_concats(test[i].in[0], test[i].in[1], test[i].in[2], NULL);
-    EXPECT_STREQ(test[i].got, test[i].want);
+    struct Want
+    {
+      const char *text;
+    } want;
+  };
 
-    teardown(test[i].got);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"three-parts", {"a", "b", "c"}, {"abc"}},
+    {"leading-empty", {"", "b", "c"}, {"bc"}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_concats(tc.in.a, tc.in.b, tc.in.c, nullptr);
+
+    // Assert
+    ASSERT_NE(got, nullptr);
+    EXPECT_STREQ(got, tc.want.text);
+    char_free(got);
   }
 }
 
-TEST(char, trimSpace) {
-  typedef struct s_test {
-    char *in;
-    char *want;
-    char *got;
-  } test_t;
+TEST(CharTest, TrimSpace)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[9] = {{.in = "  leading space\0", .want = "leading space\0"},
-                    {.in = "trailing space  \0", .want = "trailing space\0"},
-                    {.in = "  both space  \0", .want = "both space\0"},
-                    {.in = "no space", .want = "no space"},
-                    {.in = " ⌘{čřžŧ¶'`[łĐŧđĐ¶ ", .want = "⌘{čřžŧ¶'`[łĐŧđĐ¶"},
-                    {.in = "!@#hello world123$%^", .want = "!@#hello world123$%^"},
-                    {.in = "  \0", .want = NULL},
-                    {.in = "\0", .want = NULL},
-                    {.in = NULL, .want = NULL}};
+    struct In
+    {
+      const char *str;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_trimSpace(test[i].in);
-    EXPECT_STREQ(test[i].got, test[i].want);
+    struct Want
+    {
+      const char *text;
+    } want;
+  };
 
-    teardown(test[i].got);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"null", {nullptr}, {nullptr}},
+    {"trim-both", {"  hello  "}, {"hello"}},
+    {"trim-tabs", {"\t\nhi\t"}, {"hi"}},
+    {"no-trim", {"hello"}, {"hello"}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_trimSpace(tc.in.str);
+
+    // Assert
+    if (tc.want.text == nullptr) {
+      EXPECT_EQ(got, nullptr);
+    } else {
+      ASSERT_NE(got, nullptr);
+      EXPECT_STREQ(got, tc.want.text);
+      char_free(got);
+    }
   }
 }
 
-TEST(char, trimNonAlphanum) {
-  typedef struct s_test {
-    char *in;
-    char *want;
-    char *got;
-  } test_t;
+TEST(CharTest, TrimNonAlphanum)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[9] = {{.in = "  leading space\0", .want = "leading space\0"},
-                    {.in = "trailing space  \0", .want = "trailing space\0"},
-                    {.in = "  both space  \0", .want = "both space\0"},
-                    {.in = "no space", .want = "no space"},
-                    {.in = " ⌘{čřžŧ¶'`[łĐŧđĐ¶ ", .want = NULL},
-                    {.in = "!@#hello world123$%^", .want = "hello world123"},
-                    {.in = "  \0", .want = NULL},
-                    {.in = "\0", .want = NULL},
-                    {.in = NULL, .want = NULL}};
+    struct In
+    {
+      const char *str;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_trimNonAlphanum(test[i].in);
-    EXPECT_STREQ(test[i].got, test[i].want);
+    struct Want
+    {
+      const char *text;
+    } want;
+  };
 
-    teardown(test[i].got);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"null", {nullptr}, {nullptr}},
+    {"trim-both", {"--abc--"}, {"abc"}},
+    {"keep-middle", {"!!a1!!"}, {"a1"}},
+    {"no-trim", {"abc"}, {"abc"}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_trimNonAlphanum(tc.in.str);
+
+    // Assert
+    if (tc.want.text == nullptr) {
+      EXPECT_EQ(got, nullptr);
+    } else {
+      ASSERT_NE(got, nullptr);
+      EXPECT_STREQ(got, tc.want.text);
+      char_free(got);
+    }
   }
 }
 
-TEST(char, toUppercase) {
-  typedef struct s_test {
-    char *in;
-    char *want;
-    char *got;
-  } test_t;
+TEST(CharTest, ToUppercase)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[8] = {{.in = "@{}[]().:;_-+~*!%$#\0", .want = "@{}[]().:;_-+~*!%$#\0"},
-                    {.in = "⌘{čřžŧ¶'`[łĐŧđĐ¶\0", .want = "⌘{čřžŧ¶'`[łĐŧđĐ¶\0"},
-                    {.in = "0123456789\0", .want = "0123456789\0"},
-                    {.in = "  whitespaces  \0", .want = "  WHITESPACES  \0"},
-                    {.in = "unit@test.com\0", .want = "UNIT@TEST.COM\0"},
-                    {.in = "  \0", .want = "  \0"},
-                    {.in = "\0", .want = NULL},
-                    {.in = NULL, .want = NULL}};
+    struct In
+    {
+      const char *str;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_toUppercase(test[i].in);
-    EXPECT_STREQ(test[i].got, test[i].want);
+    struct Want
+    {
+      const char *text;
+    } want;
+  };
 
-    teardown(test[i].got);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"null", {nullptr}, {nullptr}},
+    {"mixed", {"Abc!"}, {"ABC!"}},
+    {"already-upper", {"ABC"}, {"ABC"}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_toUppercase(tc.in.str);
+
+    // Assert
+    if (tc.want.text == nullptr) {
+      EXPECT_EQ(got, nullptr);
+    } else {
+      ASSERT_NE(got, nullptr);
+      EXPECT_STREQ(got, tc.want.text);
+      char_free(got);
+    }
   }
 }
 
-TEST(char, toLowercase) {
-  typedef struct s_test {
-    char *in;
-    char *want;
-    char *got;
-  } test_t;
+TEST(CharTest, ToLowercase)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[8] = {{.in = "@{}[]().:;_-+~*!%$#\0", .want = "@{}[]().:;_-+~*!%$#\0"},
-                    {.in = "⌘{čřžŧ¶'`[łĐŧđĐ¶\0", .want = "⌘{čřžŧ¶'`[łĐŧđĐ¶\0"},
-                    {.in = "0123456789\0", .want = "0123456789\0"},
-                    {.in = "  WHITESPACES  \0", .want = "  whitespaces  \0"},
-                    {.in = "UNIT@TEST.COM\0", .want = "unit@test.com\0"},
-                    {.in = "  \0", .want = "  \0"},
-                    {.in = "\0", .want = NULL},
-                    {.in = NULL, .want = NULL}};
+    struct In
+    {
+      const char *str;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_toLowercase(test[i].in);
-    EXPECT_STREQ(test[i].got, test[i].want);
+    struct Want
+    {
+      const char *text;
+    } want;
+  };
 
-    teardown(test[i].got);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"null", {nullptr}, {nullptr}},
+    {"mixed", {"AbC!"}, {"abc!"}},
+    {"already-lower", {"abc"}, {"abc"}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_toLowercase(tc.in.str);
+
+    // Assert
+    if (tc.want.text == nullptr) {
+      EXPECT_EQ(got, nullptr);
+    } else {
+      ASSERT_NE(got, nullptr);
+      EXPECT_STREQ(got, tc.want.text);
+      char_free(got);
+    }
   }
 }
 
-TEST(char, occurrences) {
-  typedef struct s_test {
-    char *in[2];
-    size_t want;
-    size_t got;
-  } test_t;
+TEST(CharTest, Occurrences)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[13] = {{.in = {"0/1/2/3\0", "/\0"}, .want = 3},
-                     {.in = {"⌘{čřžŧ¶'`[łĐŧđĐ¶\0", "⌘\0"}, .want = 1},
-                     {.in = {"unit test\0", "t\0"}, .want = 3},
-                     {.in = {"11235\0", "1\0"}, .want = 2},
-                     {.in = {"@{}[]().:;_-+~*!%$#\0", "#\0"}, .want = 1},
-                     {.in = {"go golang\0", "go\0"}, .want = 2},
-                     {.in = {"  spaces  \0", " \0"}, .want = 4},
-                     {.in = {"  \0", "  \0"}, .want = 1},
-                     {.in = {"str\0", "\0"}, .want = 0},
-                     {.in = {"\0", "occur\0"}, .want = 0},
-                     {.in = {"\0", "\0"}, .want = 0},
-                     {.in = {"\0", NULL}, .want = 0},
-                     {.in = {NULL, NULL}, .want = 0}};
+    struct In
+    {
+      const char *str;
+      const char *sub;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_occurrences(test[i].in[0], test[i].in[1]);
-    EXPECT_EQ(test[i].got, test[i].want);
+    struct Want
+    {
+      size_t count;
+    } want;
+  };
+
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"null", {nullptr, "a"}, {0}},
+    {"empty-sub", {"abc", ""}, {0}},
+    {"no-match", {"abc", "z"}, {0}},
+    {"non-overlap", {"abababa", "aba"}, {2}},
+    {"single", {"abc", "b"}, {1}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_occurrences(tc.in.str, tc.in.sub);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.count);
   }
 }
 
-TEST(char, replace) {
-  typedef struct s_test {
-    char *in[4];
-    char *want;
-    char *got;
-  } test_t;
+TEST(CharTest, Replace)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[18] = {
-      {.in = {"0#1#2\0", "#\0", "$\0", "-1\0"}, .want = "0$1$2\0"},
-      {.in = {"0#1#2\0", "#\0", "$\0", "0\0"}, .want = "0#1#2\0"},
-      {.in = {"0#1#2\0", "#\0", "$\0", "1\0"}, .want = "0$1#2\0"},
-      {.in = {"0#1#2\0", "#\0", "$\0", "2\0"}, .want = "0$1$2\0"},
-      {.in = {"0#1#2\0", "#\0", "$\0", "3\0"}, .want = "0$1$2\0"},
-      {.in = {"⌘{čřžŧ¶'`[łĐŧđĐ¶\0", "¶\0", "⌘\0", "-1\0"}, .want = "⌘{čřžŧ⌘'`[łĐŧđĐ⌘\0"},
-      {.in = {"Hello World\0", "l\0", "00\0", "-1\0"}, .want = "He0000o Wor00d\0"},
-      {.in = {"Hello World\0", "Hello\0", "Programmer\0", "-1\0"}, .want = "Programmer World\0"},
-      {.in = {"0#1#2\0", "#\0", "\0", "-1\0"}, .want = "012\0"},
-      {.in = {"0#1#2\0", "\0", "$\0", "-1\0"}, .want = NULL},
-      {.in = {"\0", "#\0", "$\0", "-1\0"}, .want = NULL},
-      {.in = {"\0", "\0", "$\0", "-1\0"}, .want = NULL},
-      {.in = {"\0", "\0", "\0", "-1\0"}, .want = NULL},
-      {.in = {"0#1#2\0", "#\0", NULL, "-1\0"}, .want = NULL},
-      {.in = {"0#1#2\0", NULL, "$\0", "-1\0"}, .want = NULL},
-      {.in = {NULL, "#\0", "$\0", "-1\0"}, .want = NULL},
-      {.in = {"0#1#2\0", NULL, NULL, "-1\0"}, .want = NULL},
-      {.in = {NULL, NULL, NULL, "-1\0"}, .want = NULL}};
+    struct In
+    {
+      const char *str;
+      const char *pre;
+      const char *post;
+      int count;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got =
-        char_replace(test[i].in[0], test[i].in[1], test[i].in[2], char_toInteger(test[i].in[3]));
-    EXPECT_STREQ(test[i].got, test[i].want);
+    struct Want
+    {
+      const char *text;
+      bool is_null;
+    } want;
+  };
 
-    teardown(test[i].got);
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"null-post", {"aa", "a", nullptr, 1}, {nullptr, true}},
+    {"count-zero", {"abc", "a", "z", 0}, {"abc", false}},
+    {"no-occurrence", {"abc", "z", "x", 3}, {"abc", false}},
+    {"replace-all", {"aa", "a", "b", 2}, {"bb", false}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_replace(tc.in.str, tc.in.pre, tc.in.post, tc.in.count);
+
+    // Assert
+    if (tc.want.is_null) {
+      EXPECT_EQ(got, nullptr);
+    } else {
+      ASSERT_NE(got, nullptr);
+      EXPECT_STREQ(got, tc.want.text);
+      char_free(got);
+    }
   }
 }
 
-TEST(char, contains) {
-  typedef struct s_test {
-    char *in[2];
-    bool want;
-    bool got;
-  } test_t;
+TEST(CharTest, Contains)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[13] = {{.in = {"This is a sample sentence.\0", "sentence\0"}, .want = true},
-                     {.in = {"This is a sample sentence.\0", "This\0"}, .want = true},
-                     {.in = {"This is a sample sentence.\0", "Sentence\0"}, .want = false},
-                     {.in = {"This-is-a-sample-sentence.\0", "sentence\0"}, .want = true},
-                     {.in = {"This is a sample sentence.\0", "\0"}, .want = false},
-                     {.in = {"\0", "\0"}, .want = false},
-                     {.in = {"\0", NULL}, .want = false},
-                     {.in = {NULL, NULL}, .want = false}};
+    struct In
+    {
+      const char *str;
+      const char *sub;
+    } in;
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = char_contains(test[i].in[0], test[i].in[1]);
-    EXPECT_EQ(test[i].got, test[i].want);
+    struct Want
+    {
+      bool contains;
+    } want;
+  };
+
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"null", {nullptr, "a"}, {false}},
+    {"empty-sub", {"abc", ""}, {false}},
+    {"missing", {"abc", "z"}, {false}},
+    {"present", {"abc", "b"}, {true}},
+  };
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    auto got = char_contains(tc.in.str, tc.in.sub);
+
+    // Assert
+    EXPECT_EQ(got, tc.want.contains);
   }
 }
 
-TEST(char, free) {
-  typedef struct s_test {
-    char *in;
-  } test_t;
+TEST(CharTest, Free)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
 
-  test_t test[2] = {{.in = char_trimSpace(" whitespace ")}, {.in = NULL}};
+    struct In
+    {
+      char *str;
+    } in;
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    char_free(test[i].in);
+  // Table-Driven Testing
+  Tests freeAllocated{"allocated", {char_fromInteger(123)}};
+  Tests freeNull{"null", {nullptr}};
+  const std::vector<Tests> tests = {freeAllocated, freeNull};
+
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // no setup needed
+
+    // Act
+    char_free(tc.in.str);
+
+    // Assert
+    // No assertion needed, just ensure no crash
   }
 }

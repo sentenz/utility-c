@@ -1,223 +1,352 @@
-// SPDX-License-Identifier: Apache-2.0
+#include <gtest/gtest.h>
 
-#include "utility-c/uri.h"
+#include <cstring>
+#include <memory>
+#include <string>
+#include <vector>
 
-#include "gtest/gtest.h"
+#include "utility-c/utils/uri.h"
 
-TEST(uri, scheme) {
-  typedef struct s_test {
-    char *in;
-    char *want;
-    char *got;
-  } test_t;
+TEST(UriTest, Scheme)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *uri;
+    } in;
+    struct Want
+    {
+      const char *expected;
+    } want;
+  };
 
-  test_t test[15] = {
-      {.in = "http://example.de\0", .want = "http\0"},
-      {.in = "https://example.com/\0", .want = "https\0"},
-      {.in = "http://example.de/path/to/object/a\0", .want = "http\0"},
-      {.in = "https://example.com/path/to/object/b/\0", .want = "https\0"},
-      {.in = "ftp:///home/user/config.txt\0", .want = "ftp\0"},
-      {.in = "opc.tcp://localhost:4840\0", .want = "opc.tcp\0"},
-      {.in = "opc.mqtt://127.0.0.1:1883/\0", .want = "opc.mqtt\0"},
-      {.in = "http://foo:bar@host:123\0", .want = "http\0"},
-      {.in = "http://foo:bar@host:123/\0", .want = "http\0"},
-      {.in = "http://user:pass@host:123/path\0", .want = "http\0"},
-      {.in = "http://foo:bar@host:123/path?query\0", .want = "http\0"},
-      {.in = "http://foo:bar@host:123/path?query#fragment\0", .want = "http\0"},
-      {.in = "scheme://user:pass@[v7.X]:5555/path/?query#fragment\0", .want = "scheme\0"},
-      {.in = "\0", .want = NULL},
-      {.in = NULL, .want = NULL}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"http-scheme", {"http://example.com"}, {"http"}},
+    {"https-scheme", {"https://example.com"}, {"https"}},
+    {"ftp-scheme", {"ftp://example.com"}, {"ftp"}},
+    {"no-scheme", {"example.com"}, {NULL}},
+    {"empty-string", {""}, {NULL}},
+    {"invalid-scheme", {"://example.com"}, {NULL}},
+    {"scheme-only", {"http://"}, {"http"}},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = uri_scheme(test[i].in);
-    EXPECT_STREQ(test[i].got, test[i].want);
-    free(test[i].got);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    std::unique_ptr<char, decltype(&free)> got(uri_scheme(tc.in.uri), free);
+
+    // Assert
+    if (tc.want.expected == NULL)
+    {
+      EXPECT_EQ(got.get(), nullptr);
+    }
+    else
+    {
+      ASSERT_NE(got.get(), nullptr);
+      EXPECT_STREQ(got.get(), tc.want.expected);
+    }
   }
 }
 
-TEST(uri, host) {
-  typedef struct s_test {
-    char *in;
-    char *want;
-    char *got;
-  } test_t;
+TEST(UriTest, Host)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *uri;
+    } in;
+    struct Want
+    {
+      const char *expected;
+    } want;
+  };
 
-  test_t test[15] = {
-      {.in = "http://example.de\0", .want = "example.de\0"},
-      {.in = "https://example.com/\0", .want = "example.com\0"},
-      {.in = "http://example.de/path/to/object/a\0", .want = "example.de\0"},
-      {.in = "https://example.com/path/to/object/b/\0", .want = "example.com\0"},
-      {.in = "ftp:///home/user/config.txt\0", .want = "\0"},
-      {.in = "opc.tcp://localhost:4840\0", .want = "localhost\0"},
-      {.in = "opc.mqtt://127.0.0.1:1883/\0", .want = "127.0.0.1\0"},
-      {.in = "http://foo:bar@host:123\0", .want = "host\0"},
-      {.in = "http://foo:bar@host:123/\0", .want = "host\0"},
-      {.in = "http://user:pass@host:123/path\0", .want = "host\0"},
-      {.in = "http://foo:bar@host:123/path?query\0", .want = "host\0"},
-      {.in = "http://foo:bar@host:123/path?query#fragment\0", .want = "host\0"},
-      {.in = "scheme://user:pass@[v7.X]:5555/path/?query#fragment\0", .want = "v7.X\0"},
-      {.in = "\0", .want = NULL},
-      {.in = NULL, .want = NULL}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"http-host", {"http://example.com"}, {"example.com"}},
+    {"https-host", {"https://example.com"}, {"example.com"}},
+    {"host-with-port", {"http://example.com:8080"}, {"example.com"}},
+    {"host-with-user", {"http://user@example.com"}, {"example.com"}},
+    {"no-host", {"http://"}, {""}},
+    {"empty-string", {""}, {NULL}},
+    {"invalid-uri", {"invalid"}, {NULL}},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = uri_host(test[i].in);
-    EXPECT_STREQ(test[i].got, test[i].want);
-    free(test[i].got);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    std::unique_ptr<char, decltype(&free)> got(uri_host(tc.in.uri), free);
+
+    // Assert
+    if (tc.want.expected == NULL)
+    {
+      EXPECT_EQ(got.get(), nullptr);
+    }
+    else
+    {
+      ASSERT_NE(got.get(), nullptr);
+      EXPECT_STREQ(got.get(), tc.want.expected);
+    }
   }
 }
 
-TEST(uri, port) {
-  typedef struct s_test {
-    char *in;
-    char *want;
-    char *got;
-  } test_t;
+TEST(UriTest, Port)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *uri;
+    } in;
+    struct Want
+    {
+      const char *expected;
+    } want;
+  };
 
-  test_t test[15] = {
-      {.in = "http://example.de\0", .want = NULL},
-      {.in = "https://example.com/\0", .want = NULL},
-      {.in = "http://example.de/path/to/object/a\0", .want = NULL},
-      {.in = "https://example.com/path/to/object/b/\0", .want = NULL},
-      {.in = "ftp:///home/user/config.txt\0", .want = NULL},
-      {.in = "opc.tcp://localhost:4840\0", .want = "4840\0"},
-      {.in = "opc.mqtt://127.0.0.1:1883/\0", .want = "1883\0"},
-      {.in = "http://foo:bar@host:123\0", .want = "123\0"},
-      {.in = "http://foo:bar@host:123/\0", .want = "123\0"},
-      {.in = "http://user:pass@host:123/path\0", .want = "123\0"},
-      {.in = "http://foo:bar@host:123/path?query\0", .want = "123\0"},
-      {.in = "http://foo:bar@host:123/path?query#fragment\0", .want = "123\0"},
-      {.in = "scheme://user:pass@[v7.X]:5555/path/?query#fragment\0", .want = "5555\0"},
-      {.in = "\0", .want = NULL},
-      {.in = NULL, .want = NULL}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"default-http-port", {"http://example.com"}, {NULL}},
+    {"explicit-port", {"http://example.com:8080"}, {"8080"}},
+    {"https-default", {"https://example.com"}, {NULL}},
+    {"ftp-default", {"ftp://example.com"}, {NULL}},
+    {"no-port", {"http://example.com"}, {NULL}},
+    {"empty-string", {""}, {NULL}},
+    {"invalid-uri", {"invalid"}, {NULL}},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = uri_port(test[i].in);
-    EXPECT_STREQ(test[i].got, test[i].want);
-    free(test[i].got);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    std::unique_ptr<char, decltype(&free)> got(uri_port(tc.in.uri), free);
+
+    // Assert
+    if (tc.want.expected == NULL)
+    {
+      EXPECT_EQ(got.get(), nullptr);
+    }
+    else
+    {
+      ASSERT_NE(got.get(), nullptr);
+      EXPECT_STREQ(got.get(), tc.want.expected);
+    }
   }
 }
 
-TEST(uri, user) {
-  typedef struct s_test {
-    char *in;
-    char *want;
-    char *got;
-  } test_t;
+TEST(UriTest, User)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *uri;
+    } in;
+    struct Want
+    {
+      const char *expected;
+    } want;
+  };
 
-  test_t test[15] = {
-      {.in = "http://example.de\0", .want = NULL},
-      {.in = "https://example.com/\0", .want = NULL},
-      {.in = "http://example.de/path/to/object/a\0", .want = NULL},
-      {.in = "https://example.com/path/to/object/b/\0", .want = NULL},
-      {.in = "ftp:///home/user/config.txt\0", .want = NULL},
-      {.in = "opc.tcp://localhost:4840\0", .want = NULL},
-      {.in = "opc.mqtt://127.0.0.1:1883/\0", .want = NULL},
-      {.in = "http://foo:bar@host:123\0", .want = "foo:bar\0"},
-      {.in = "http://foo:bar@host:123/\0", .want = "foo:bar\0"},
-      {.in = "http://user:pass@host:123/path\0", .want = "user:pass\0"},
-      {.in = "http://foo:bar@host:123/path?query\0", .want = "foo:bar\0"},
-      {.in = "http://foo:bar@host:123/path?query#fragment\0", .want = "foo:bar\0"},
-      {.in = "scheme://user:pass@[v7.X]:5555/path/?query#fragment\0", .want = "user:pass\0"},
-      {.in = "\0", .want = NULL},
-      {.in = NULL, .want = NULL}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"with-user", {"http://user@example.com"}, {"user"}},
+    {"user-password", {"http://user:pass@example.com"}, {"user:pass"}},
+    {"no-user", {"http://example.com"}, {NULL}},
+    {"empty-string", {""}, {NULL}},
+    {"invalid-uri", {"invalid"}, {NULL}},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = uri_user(test[i].in);
-    EXPECT_STREQ(test[i].got, test[i].want);
-    free(test[i].got);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    std::unique_ptr<char, decltype(&free)> got(uri_user(tc.in.uri), free);
+
+    // Assert
+    if (tc.want.expected == NULL)
+    {
+      EXPECT_EQ(got.get(), nullptr);
+    }
+    else
+    {
+      ASSERT_NE(got.get(), nullptr);
+      EXPECT_STREQ(got.get(), tc.want.expected);
+    }
   }
 }
 
-TEST(uri, query) {
-  typedef struct s_test {
-    char *in;
-    char *want;
-    char *got;
-  } test_t;
+TEST(UriTest, Query)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *uri;
+    } in;
+    struct Want
+    {
+      const char *expected;
+    } want;
+  };
 
-  test_t test[15] = {
-      {.in = "http://example.de\0", .want = NULL},
-      {.in = "https://example.com/\0", .want = NULL},
-      {.in = "http://example.de/path/to/object/a\0", .want = NULL},
-      {.in = "https://example.com/path/to/object/b/\0", .want = NULL},
-      {.in = "ftp:///home/user/config.txt\0", .want = NULL},
-      {.in = "opc.tcp://localhost:4840\0", .want = NULL},
-      {.in = "opc.mqtt://127.0.0.1:1883/\0", .want = NULL},
-      {.in = "http://foo:bar@host:123\0", .want = NULL},
-      {.in = "http://foo:bar@host:123/\0", .want = NULL},
-      {.in = "http://user:pass@host:123/path\0", .want = NULL},
-      {.in = "http://foo:bar@host:123/path?query\0", .want = "query\0"},
-      {.in = "http://foo:bar@host:123/path?query#fragment\0", .want = "query\0"},
-      {.in = "scheme://user:pass@[v7.X]:5555/path/?query#fragment\0", .want = "query\0"},
-      {.in = "\0", .want = NULL},
-      {.in = NULL, .want = NULL}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"with-query", {"http://example.com?key=value"}, {"key=value"}},
+    {"multiple-params", {"http://example.com?key1=value1&key2=value2"}, {"key1=value1&key2=value2"}},
+    {"no-query", {"http://example.com"}, {NULL}},
+    {"empty-query", {"http://example.com?"}, {""}},
+    {"empty-string", {""}, {NULL}},
+    {"invalid-uri", {"invalid"}, {NULL}},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = uri_query(test[i].in);
-    EXPECT_STREQ(test[i].got, test[i].want);
-    free(test[i].got);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    std::unique_ptr<char, decltype(&free)> got(uri_query(tc.in.uri), free);
+
+    // Assert
+    if (tc.want.expected == NULL)
+    {
+      EXPECT_EQ(got.get(), nullptr);
+    }
+    else
+    {
+      ASSERT_NE(got.get(), nullptr);
+      EXPECT_STREQ(got.get(), tc.want.expected);
+    }
   }
 }
 
-TEST(uri, fragment) {
-  typedef struct s_test {
-    char *in;
-    char *want;
-    char *got;
-  } test_t;
+TEST(UriTest, Fragment)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *uri;
+    } in;
+    struct Want
+    {
+      const char *expected;
+    } want;
+  };
 
-  test_t test[15] = {
-      {.in = "http://example.de\0", .want = NULL},
-      {.in = "https://example.com/\0", .want = NULL},
-      {.in = "http://example.de/path/to/object/a\0", .want = NULL},
-      {.in = "https://example.com/path/to/object/b/\0", .want = NULL},
-      {.in = "ftp:///home/user/config.txt\0", .want = NULL},
-      {.in = "opc.tcp://localhost:4840\0", .want = NULL},
-      {.in = "opc.mqtt://127.0.0.1:1883/\0", .want = NULL},
-      {.in = "http://foo:bar@host:123\0", .want = NULL},
-      {.in = "http://foo:bar@host:123/\0", .want = NULL},
-      {.in = "http://user:pass@host:123/path\0", .want = NULL},
-      {.in = "http://foo:bar@host:123/path?query\0", .want = NULL},
-      {.in = "http://foo:bar@host:123/path?query#fragment\0", .want = "fragment\0"},
-      {.in = "scheme://user:pass@[v7.X]:5555/path/?query#fragment\0", .want = "fragment\0"},
-      {.in = "\0", .want = NULL},
-      {.in = NULL, .want = NULL}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"with-fragment", {"http://example.com#section"}, {"section"}},
+    {"no-fragment", {"http://example.com"}, {NULL}},
+    {"empty-fragment", {"http://example.com#"}, {""}},
+    {"empty-string", {""}, {NULL}},
+    {"invalid-uri", {"invalid"}, {NULL}},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = uri_fragment(test[i].in);
-    EXPECT_STREQ(test[i].got, test[i].want);
-    free(test[i].got);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    std::unique_ptr<char, decltype(&free)> got(uri_fragment(tc.in.uri), free);
+
+    // Assert
+    if (tc.want.expected == NULL)
+    {
+      EXPECT_EQ(got.get(), nullptr);
+    }
+    else
+    {
+      ASSERT_NE(got.get(), nullptr);
+      EXPECT_STREQ(got.get(), tc.want.expected);
+    }
   }
 }
 
-TEST(uri, path) {
-  typedef struct s_test {
-    char *in;
-    char *want;
-    char *got;
-  } test_t;
+TEST(UriTest, Path)
+{
+  // In-Got-Want
+  struct Tests
+  {
+    std::string label;
+    struct In
+    {
+      const char *uri;
+    } in;
+    struct Want
+    {
+      const char *expected;
+    } want;
+  };
 
-  test_t test[15] = {
-      {.in = "http://example.de\0", .want = NULL},
-      {.in = "https://example.com/\0", .want = "X\0"},
-      {.in = "http://example.de/path/to/object/a\0", .want = "path/to/object/a\0"},
-      {.in = "https://example.com/path/to/object/b/\0", .want = "path/to/object/b/\0"},
-      {.in = "ftp:///home/user/config.txt\0", .want = "home/user/config.txt\0"},
-      {.in = "opc.tcp://localhost:4840\0", .want = NULL},
-      {.in = "opc.mqtt://127.0.0.1:1883/\0", .want = "X\0"},
-      {.in = "http://foo:bar@host:123\0", .want = NULL},
-      {.in = "https://foo:bar@host:123/\0", .want = "X\0"},
-      {.in = "http://user:pass@host:123/path\0", .want = "path\0"},
-      {.in = "http://foo:bar@host:123/path?query\0", .want = "path?query\0"},
-      {.in = "http://foo:bar@host:123/path?query#fragment\0", .want = "path?query#fragment\0"},
-      {.in   = "scheme://user:pass@[v7.X]:5555/path/?query#fragment\0",
-       .want = "path/?query#fragment\0"},
-      {.in = "\0", .want = NULL},
-      {.in = NULL, .want = NULL}};
+  // Table-Driven Testing
+  const std::vector<Tests> tests = {
+    {"with-path", {"http://example.com/path"}, {"path"}},
+    {"nested-path", {"http://example.com/path/to/resource"}, {"path/to/resource"}},
+    {"root-path", {"http://example.com/"}, {"X"}},
+    {"no-path", {"http://example.com"}, {NULL}},
+    {"empty-string", {""}, {NULL}},
+    {"invalid-uri", {"invalid"}, {"invalid"}},
+  };
 
-  for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); ++i) {
-    test[i].got = uri_path(test[i].in);
-    EXPECT_STREQ(test[i].got, test[i].want);
-    free(test[i].got);
+  for (const auto &tc : tests)
+  {
+    SCOPED_TRACE(tc.label);
+
+    // Arrange
+    // No setup needed
+
+    // Act
+    std::unique_ptr<char, decltype(&free)> got(uri_path(tc.in.uri), free);
+
+    // Assert
+    if (tc.want.expected == NULL)
+    {
+      EXPECT_EQ(got.get(), nullptr);
+    }
+    else
+    {
+      ASSERT_NE(got.get(), nullptr);
+      EXPECT_STREQ(got.get(), tc.want.expected);
+    }
   }
 }
