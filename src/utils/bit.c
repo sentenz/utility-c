@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "utility-c/bit.h"
+#include "utility-c/utils/bit.h"
 
 #include <stdlib.h>
 

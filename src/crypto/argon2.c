@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "src/crypto/argon2.h"
+#include "utility-c/crypto/argon.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <time.h>
 

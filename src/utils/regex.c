@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "utility-c/regex.h"
+#include "utility-c/utils/regex.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 #if defined(S_PCRE)
   #include <pcre.h>
 #elif defined(S_PCRE2)
   #include <pcre2.h>
+#else
+  #include <regex.h>
 #endif
 
-#include "utility-c/char.h"
+#include "utility-c/utils/char.h"
 
 #ifdef S_PCRE
 
@@ -251,7 +254,7 @@ static int internal_pcre_match(const char *pattern, const char *str, const bool 
   return 0;
 }
 
-static char *internal_prce_string_between_strings(const char *str,
+static char *internal_prce_between(const char *str,
                                                   const char *leftPattern,
                                                   const char *rightPattern) {
   pcre *re          = NULL;
@@ -618,22 +621,128 @@ static int internal_pcre2_match(const char *regex, const char *match, const bool
 
 #endif  // S_PCRE
 
+#if !defined(S_PCRE) && !defined(S_PCRE2)
+
+static bool internal_posix_match(const char *pattern, const char *str) {
+  regex_t regex;
+  int rc = regcomp(&regex, pattern, REG_EXTENDED);
+  if (rc != 0) {
+    return false;
+  }
+
+  rc = regexec(&regex, str, 0, NULL, 0);
+  regfree(&regex);
+
+  return rc == 0;
+}
+
+static char *internal_posix_find(const char *pattern, const char *str) {
+  regex_t regex;
+  regmatch_t match;
+  int rc = regcomp(&regex, pattern, REG_EXTENDED);
+  if (rc != 0) {
+    return NULL;
+  }
+
+  rc = regexec(&regex, str, 1, &match, 0);
+  if (rc != 0) {
+    regfree(&regex);
+    return NULL;
+  }
+
+  size_t len = (size_t)(match.rm_eo - match.rm_so);
+  char *result = (char *)malloc(len + 1);
+  if (result == NULL) {
+    regfree(&regex);
+    return NULL;
+  }
+
+  memcpy(result, str + match.rm_so, len);
+  result[len] = S_NULL_CHAR;
+
+  regfree(&regex);
+  return result;
+}
+
+static char *internal_posix_between(const char *str,
+                                    const char *leftPattern,
+                                    const char *rightPattern) {
+  regex_t left;
+  regex_t right;
+  regmatch_t left_match;
+  regmatch_t right_match;
+
+  if (regcomp(&left, leftPattern, REG_EXTENDED) != 0) {
+    return NULL;
+  }
+
+  if (regexec(&left, str, 1, &left_match, 0) != 0) {
+    regfree(&left);
+    return NULL;
+  }
+
+  const char *after_left = str + left_match.rm_eo;
+
+  if (regcomp(&right, rightPattern, REG_EXTENDED) != 0) {
+    regfree(&left);
+    return NULL;
+  }
+
+  if (regexec(&right, after_left, 1, &right_match, 0) != 0) {
+    regfree(&right);
+    regfree(&left);
+    return NULL;
+  }
+
+  size_t start = (size_t)left_match.rm_eo;
+  size_t end = start + (size_t)right_match.rm_so;
+  size_t len = end - start;
+
+  char *result = (char *)malloc(len + 1);
+  if (result == NULL) {
+    regfree(&right);
+    regfree(&left);
+    return NULL;
+  }
+
+  memcpy(result, str + start, len);
+  result[len] = S_NULL_CHAR;
+
+  regfree(&right);
+  regfree(&left);
+  return result;
+}
+
+#endif  // !S_PCRE && !S_PCRE2
+
 bool regex_match(const char *pattern, const char *str) {
 #ifdef S_PCRE
   return internal_pcre_match(pattern, str, false) == 0;
 #elif S_PCRE2
   return internal_pcre2_match(pattern, str, false) == 0;
 #else
-  return false;
+  return internal_posix_match(pattern, str);
 #endif  // S_PCRE
 }
 
 char *regex_find(const char *pattern, const char *str) {
+#ifdef S_PCRE
   return internal_prce_find(pattern, str);
+#elif S_PCRE2
+  return internal_prce_find(pattern, str);
+#else
+  return internal_posix_find(pattern, str);
+#endif
 }
 
-char *regex_selectStringBetweenPatterns(const char *str,
+char *regex_between(const char *str,
                                         const char *leftPattern,
                                         const char *rightPattern) {
-  return internal_prce_string_between_strings(str, leftPattern, rightPattern);
+#ifdef S_PCRE
+  return internal_prce_between(str, leftPattern, rightPattern);
+#elif S_PCRE2
+  return internal_prce_between(str, leftPattern, rightPattern);
+#else
+  return internal_posix_between(str, leftPattern, rightPattern);
+#endif
 }

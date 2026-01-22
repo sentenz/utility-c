@@ -2,7 +2,7 @@
 
 #include "utility-c/authentication/password.h"
 
-#include "src/crypto/argon2.h"
+#include "utility-c/crypto/argon.h"
 
 char *password_hash(const char *password) {
   unsigned char salt[ARGON2_SALT_SIZE];

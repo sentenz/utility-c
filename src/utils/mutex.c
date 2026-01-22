@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "utility-c/mutex.h"
+#include "utility-c/utils/mutex.h"
 
 #ifdef S_POSIX
 

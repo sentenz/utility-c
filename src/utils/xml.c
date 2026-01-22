@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "utility-c/xml.h"
+#include "utility-c/utils/xml.h"
 
-#include "utility-c/char.h"
-#include "utility-c/fs.h"
-#include "utility-c/regex.h"
+#include "utility-c/utils/char.h"
+#include "utility-c/utils/fs.h"
+#include "utility-c/utils/regex.h"
 
 static void internal_print(mxml_node_t* tree) {
   char* content = mxmlSaveAllocString(tree, MXML_NO_CALLBACK);
@@ -234,10 +234,10 @@ uint32_t xml_findIdentifier(mxml_node_t* node, const char* sequence) {
     return 0;
   }
 
+  /* `attribute` is owned by the mxml library (returned by mxmlElementGetAttr)
+     and must NOT be freed by callers. Only free resources we allocate ourselves. */
   char* match = regex_find("([A-Z]*\\d[A-Z]*){4,}", attribute);
   if (match == NULL) {
-    char_free(attribute);
-
     return 0;
   }
 

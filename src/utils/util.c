@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "utility-c/util.h"
+#include "utility-c/utils/util.h"
 
 #include <math.h>
 #include <stdlib.h>

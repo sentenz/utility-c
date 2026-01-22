@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "utility-c/char.h"
+#include "utility-c/utils/char.h"
 
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "utility-c/util.h"
+#include "utility-c/utils/util.h"
 
 bool char_isEmpty(const char *str) {
   return str == NULL || str[0] == '\0';
@@ -43,20 +43,17 @@ int char_toInteger(const char *str) {
 }
 
 char *char_fromInteger(const int n) {
-  int digits = util_countDigits(n);
-  if (n < 0) {
-    // Represents a negative number `-` sign
-    digits += 1;
-  }
-
-  size_t len = digits + 1;
-
-  char *content = (char *)malloc(sizeof(char) * len);
-  if (content == NULL) {
+  char buf[32];
+  int len = snprintf(buf, sizeof(buf), "%d", n);
+  if (len < 0) {
     return NULL;
   }
 
-  snprintf(content, len, "%d", n);
+  char *content = (char *)malloc(len + 1);
+  if (content == NULL) {
+    return NULL;
+  }
+  strcpy(content, buf);
 
   return content;
 }
@@ -70,27 +67,17 @@ double char_toFloat(const char *str) {
 }
 
 char *char_fromFloat(const double n) {
-  int digits = util_countFloat(n);
-  if (digits == 0) {
+  char buf[32];
+  int len = snprintf(buf, sizeof(buf), "%f", n);
+  if (len < 0) {
     return NULL;
   }
 
-  if (n < 0) {
-    // Representsa dot notation `.`  floating-point number and a negative number `-` sign
-    digits += 2;
-  } else {
-    // Represents a dot notation `.` floating-point number
-    digits += 1;
-  }
-
-  size_t len = digits + 1;
-
-  char *content = (char *)malloc(sizeof(char) * len);
+  char *content = (char *)malloc(len + 1);
   if (content == NULL) {
     return NULL;
   }
-
-  snprintf(content, len, "%f", n);
+  strcpy(content, buf);
 
   return content;
 }

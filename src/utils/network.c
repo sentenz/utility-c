@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#include "utility-c/network.h"
+#include "utility-c/utils/network.h"
 
 #ifdef S_POSIX
   #include <arpa/inet.h>
@@ -18,7 +18,7 @@
   #include <net/route.h>
   #include <sys/ioctl.h>
 #else
-// FIXME(GTC) ecos: the standard includes cause compiler errors, replace them
+// FIXME(Sentenz) ecos: the standard includes cause compiler errors, replace them
 // with native includes to fix the compiler problems
 // #include <stdlib.h>
 
@@ -41,8 +41,9 @@ static int internal_posix_setIpv4Address(const char *ip, const char *interface) 
   /* Define IPv4 Address type */
   ifr.ifr_addr.sa_family = AF_INET;
   /* Define the port name where to attached the network, e.g. eth0 */
-  memcpy(ifr.ifr_name, interface, IFNAMSIZ - 1);
-  //  strncpy(ifr.ifr_name, interface, IFNAMSIZ - 1);
+  /* Use strncpy to avoid reading past the source string. Ensure null-termination. */
+  strncpy(ifr.ifr_name, interface, IFNAMSIZ - 1);
+  ifr.ifr_name[IFNAMSIZ - 1] = S_NULL_CHAR;
 
   struct sockaddr_in *addr = (struct sockaddr_in *)&ifr.ifr_addr;
   /* Convert ip address in correct format */
@@ -183,7 +184,9 @@ static int internal_posix_setIpv4Netmask(const char *netmask, const char *interf
   /* Define IPv4 Address type */
   ifr.ifr_addr.sa_family = AF_INET;
   /* Define the port name where to attached the network, e.g. eth0 */
-  memcpy(ifr.ifr_name, interface, IFNAMSIZ - 1);
+  /* Use strncpy to avoid reading past the source string. Ensure null-termination. */
+  strncpy(ifr.ifr_name, interface, IFNAMSIZ - 1);
+  ifr.ifr_name[IFNAMSIZ - 1] = S_NULL_CHAR;
 
   struct sockaddr_in *addr = (struct sockaddr_in *)&ifr.ifr_addr;
   /* Convert netmask address in correct format to write */
@@ -407,7 +410,7 @@ static char *internal_pnio_nvDataRestoreIpAddress() {
   }
 
   ipAddress = malloc(ipAddressLen);
-  // FIXME(GTC) lint: never use sprintf, use snprintf instead
+  // FIXME(Sentenz) lint: never use sprintf, use snprintf instead
   sprintf(ipAddress,
           "%03d.%03d.%03d.%03d",
           *(ipSuite + 0),
@@ -441,7 +444,7 @@ static char *internal_pnio_nvDataRestoreSubnetMask() {
   }
 
   subnetMask = malloc(subnetMaskLen);
-  // FIXME(GTC) lint: never use sprintf, use snprintf instead
+  // FIXME(Sentenz) lint: never use sprintf, use snprintf instead
   sprintf(subnetMask,
           "%03d.%03d.%03d.%03d",
           *(ipSuite + 4),
@@ -475,7 +478,7 @@ static char *internal_pnio_nvDataRestoreGateway() {
   }
 
   gateway = malloc(gatewayLen);
-  // FIXME(GTC) lint: never use sprintf, use snprintf instead
+  // FIXME(Sentenz) lint: never use sprintf, use snprintf instead
   sprintf(gateway,
           "%03d.%03d.%03d.%03d",
           *(ipSuite + 8),
