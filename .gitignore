@@ -1,82 +1,77 @@
 # https://www.toptal.com/developers/gitignore
 
-# Miscellaneous
-*.bak
-~$*
-.metadata
-node_modules/
+### Miscellaneous ###
 
-# Git
-.gitmodules
-
-# Logs
 *.log
 logs/
+*.tmp
+build/
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+### Git ###
+# Created by git for backups. To disable backups in Git:
+# $ git config --global mergetool.keepBackup false
+*.orig
 
-###
+# Created by git when using merge tools for conflicts
+*.BACKUP.*
+*.BASE.*
+*.LOCAL.*
+*.REMOTE.*
+*_BACKUP_*.txt
+*_BASE_*.txt
+*_LOCAL_*.txt
+*_REMOTE_*.txt
 
-# Python byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# C/C++ Prerequisites
+### C ###
+# Prerequisites
 *.d
 
-# C Object files
+# Object files
+*.o
 *.ko
+*.obj
 *.elf
 
-# C++ Object files
-*.slo
-*.lo
-
-# C/C++ Object files
-*.o
-*.obj
-
-# C Linker output
+# Linker output
 *.ilk
 *.map
 *.exp
 
-# C/C++ Precompiled Headers
+# Precompiled Headers
 *.gch
 *.pch
 
-# C Static libraries
+# Libraries
 *.lib
 *.a
 *.la
 *.lo
-lib/
 
-# C/C++ Dynamic libraries (inc. Windows DLLs)
+# Shared objects (inc. Windows DLLs)
 *.dll
 *.so
 *.so.*
 *.dylib
 
-# C/C++ Executables
+# Executables
 *.exe
 *.out
 *.app
 *.i*86
 *.x86_64
 *.hex
-bin/
 
-# C Debug files
+# Debug files
 *.dSYM/
 *.su
 *.idb
 *.pdb
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf

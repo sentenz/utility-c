@@ -7,9 +7,6 @@ endif
 
 # Define Variables
 
-IS_WINDOWS := $(findstring Windows_NT,$(OS))
-POWERSHELL := powershell
-
 PIP_VENV := .venv/bin
 
 SHELL := bash
@@ -112,7 +109,7 @@ LOGS_PATH_COVERAGE := logs/coverage
 ## Generate code coverage report from dynamic analysis
 analysis-dynamic-coverage:
 	@mkdir -p "$(CURDIR)/${LOGS_PATH_COVERAGE}"
-	gcovr --xml-pretty --print-summary --cobertura --output "$(CURDIR)/${LOGS_PATH_COVERAGE}/cobertura.xml" --html="$(CURDIR)/${LOGS_PATH_COVERAGE}/" --filter "src/" --exclude-unreachable-branches
+	gcovr --xml-pretty --print-summary --cobertura --output "$(CURDIR)/${LOGS_PATH_COVERAGE}/cobertura.xml" --html="$(CURDIR)/${LOGS_PATH_COVERAGE}/" --filter "src/" --exclude-unreachable-branches --gcov-ignore-parse-errors=suspicious_hits.warn_once_per_file
 .PHONY: analysis-dynamic-coverage
 
 # ── SAST Manager ─────────────────────────────────────────────────────────────────────────────────
