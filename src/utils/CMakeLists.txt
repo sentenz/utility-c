@@ -1,27 +1,31 @@
 # ── Library Target ───────────────────────────────────────────────────────────────────────────────
 
-find_package(argon2 CONFIG REQUIRED)
+find_package(uriparser REQUIRED)
 
-add_library(${PROJECT_NAME}-crypto STATIC)
+add_library(${PROJECT_NAME}-utils STATIC)
 
 target_sources(
-    ${PROJECT_NAME}-crypto
+    ${PROJECT_NAME}-utils
     PRIVATE
-        argon2.c
-    PUBLIC FILE_SET public_headers
-    TYPE HEADERS
-    BASE_DIRS ${PROJECT_SOURCE_DIR}/include
-    FILES
-        ${PROJECT_SOURCE_DIR}/include/utility-c/crypto/argon.h
+        regex.c
+        util.c
+        char.c
+        bit.c
+        mutex.c
+        uri.c
+        fs.c
+        xml.c
+        network.c
 )
 
-target_link_libraries(${PROJECT_NAME}-crypto
+target_link_libraries(${PROJECT_NAME}-utils
     PUBLIC ${PROJECT_NAME}::interface
-    PRIVATE argon2::argon2
+    PUBLIC external::libmxml
+    PRIVATE uriparser::uriparser
 )
 
 # Export a namespaced alias for subprojects and downstream consumers to link
-add_library(${PROJECT_NAME}::crypto ALIAS ${PROJECT_NAME}-crypto)
+add_library(${PROJECT_NAME}::utils ALIAS ${PROJECT_NAME}-utils)
 
 # ── Unit Tests ───────────────────────────────────────────────────────────────────────────────────
 
@@ -29,7 +33,15 @@ meta_gtest(
     ENABLE ${META_BUILD_TESTING}
     TARGET ${PROJECT_NAME}-test
     SOURCES
-        argon2_test.cc
+        regex_test.cc
+        util_test.cc
+        char_test.cc
+        network_test.cc
+        bit_test.cc
+        mutex_test.cc
+        uri_test.cc
+        fs_test.cc
+        xml_test.cc
     LINK
-        ${PROJECT_NAME}::crypto
+        ${PROJECT_NAME}::utils
 )

@@ -1,31 +1,33 @@
-# Build library
-if(UTILITYC_BUILD_LIB)
-  # Add sources to target
-  target_sources(
-    ${PROJECT_NAME}
-    PRIVATE network.c
-            regex.c
-            util.c
-            char.c
-            bit.c
-            uri.c
-            fs.c
-            xml.c)
-endif() # UTILITYC_BUILD_LIB
+# ── Include Target ─────────────────────────────────────────────────────────────────────────────
 
-# Create executable UnitTest
-if(UTILITYC_BUILD_TEST)
-  target_sources(
-    ${PROJECT_NAME}-test
-    PRIVATE network_test.cc
-            regex_test.cc
-            util_test.cc
-            char_test.cc
-            bit_test.cc
-            uri_test.cc
-            fs_test.cc
-            xml_test.cc)
-endif() # UTILITYC_BUILD_TEST
+# Provide an interface target for including headers
+add_library(${PROJECT_NAME}-interface INTERFACE)
+target_include_directories(${PROJECT_NAME}-interface INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>
+)
+target_compile_definitions(${PROJECT_NAME}-interface INTERFACE
+    S_HAVE_CONFIG_H
+    S_POSIX
+    HAVE_CONFIG_H
+)
+
+# Export a namespaced alias for subprojects and downstream consumers to link
+add_library(${PROJECT_NAME}::interface ALIAS ${PROJECT_NAME}-interface)
+
+# ── Unit Tests ───────────────────────────────────────────────────────────────────────────────────
+
+include(meta_gtest)
+meta_gtest(
+    ENABLE ${META_BUILD_TESTING}
+    WITH_CTEST
+    WITH_MAIN
+    TARGET ${PROJECT_NAME}-test
+)
+
+# ── Subdirectories ───────────────────────────────────────────────────────────────────────────────
 
 add_subdirectory(authentication)
 add_subdirectory(crypto)
+add_subdirectory(utils)
