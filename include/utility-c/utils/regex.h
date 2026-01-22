@@ -39,7 +39,7 @@ char *regex_find(const char *pattern, const char *str);
 /// @param rightPattern The right pattern to search for.
 /// @return A pointer to the selected substring, or NULL if not found.
 /// @note The caller is responsible for freeing the memory using free().
-char *regex_selectStringBetweenPatterns(const char *str,
+char *regex_between(const char *str,
                                         const char *leftPattern,
                                         const char *rightPattern);
 

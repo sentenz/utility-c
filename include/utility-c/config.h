@@ -56,9 +56,6 @@ extern "C" {
 #endif
 
 /* Define regex library PCRE */
-#if !defined(S_PCRE)
-  #define S_PCRE
-#endif
 
 /* Define regex library PCRE2 */
 // #undef S_PCRE2

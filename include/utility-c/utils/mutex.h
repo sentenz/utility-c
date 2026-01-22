@@ -7,7 +7,7 @@
   #include "utility-c/config.h"
 #endif
 
-#include "utility-c/types.h"
+#include "utility-c/utils/types.h"
 
 #ifdef __cplusplus
 extern "C" {
