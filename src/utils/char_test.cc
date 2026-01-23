@@ -28,6 +28,8 @@ TEST(CharTest, IsEmpty)
     {"null", {nullptr}, {true}},
     {"empty", {""}, {true}},
     {"non-empty", {"abc"}, {false}},
+    {"whitespaces", {" \t\n"}, {false}},
+    {"special-chars", {"!@#$%^&*()"}, {false}},
   };
 
   for (const auto &tc : tests)
@@ -64,12 +66,14 @@ TEST(CharTest, IsValid)
   };
 
   // Table-Driven Testing
-  const char nonAscii[] = {static_cast<char>(0x80), '\0'};
   const std::vector<Tests> tests = {
     {"null", {nullptr}, {false}},
     {"empty", {""}, {false}},
     {"ascii", {"abc123"}, {true}},
-    {"non-ascii", {nonAscii}, {false}},
+    {"non-ascii", {"abc\xFF"}, {false}},
+    {"whitespaces", {" \t\n"}, {true}},
+    {"special-chars", {"!@#$%^&*()"}, {true}},
+    {"mixed", {"Hello, !@#$%^&*! 123"}, {true}},
   };
 
   for (const auto &tc : tests)
