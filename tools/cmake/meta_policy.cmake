@@ -17,7 +17,6 @@ include_guard(GLOBAL)
 function(meta_policy)
     cmake_parse_arguments(PARSE_ARGV 0 ARG "" "" "")
 
-
     # Global Language Properties
     set(CMAKE_CXX_STANDARD 23 CACHE STRING "C++ standard to be used")
     set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE BOOL "Require C++ standard")
