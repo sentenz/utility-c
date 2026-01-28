@@ -8,14 +8,15 @@ metadata:
     priority: 0
     triggers:
       - "doxygen"
-      - "api documentation"
+      - "API docs"
+      - "API documentation"
       - "document the API"
       - "add doc comments"
     match:
       # Prefer C/C++ related prompts and repository areas.
       languages: ["cpp", "c", "c++"]
       paths: ["src/**/*.hpp", "src/**/*.h", "include/**/*.hpp", "include/**/*.h"]
-      prompt_regex: "(?i)(api doc|doxygen|document the API|api documentation|doc comments)"
+      prompt_regex: "(?i)(api doc|doxygen|document the API|API docs|doc comments)"
   usage:
     load_on_prompt: true
     autodispatch: true
