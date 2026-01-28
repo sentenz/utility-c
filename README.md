@@ -1,9 +1,8 @@
 # Utility C
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![CMake](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fsentenz%2Ftemplate-cpp%2Fmain%2FCMakeLists.txt&label=CMake&search=%28%5B0-9%5D%2B%5C.%5B0-9%5D%2B%5C.%5B0-9%5D%2B%29&color=blue&logo=cmake)](https://cmake.org/)
 
-A collection of utility functions in C.
+Provides a C language utility library with various helper functions and data structures to facilitate C development.
 
 - [1. Details](#1-details)
   - [1.1. Prerequisites](#11-prerequisites)
@@ -29,8 +28,10 @@ A collection of utility functions in C.
   - [2.10. Update Manager](#210-update-manager)
     - [2.10.1. Renovate](#2101-renovate)
     - [2.10.2. Dependabot](#2102-dependabot)
-  - [2.11. Supply Chain Manager](#211-supply-chain-manager)
-    - [2.11.1. Trivy](#2111-trivy)
+  - [2.11. Policy Manager](#211-policy-manager)
+    - [2.11.1. Conftest](#2111-conftest)
+  - [2.12. Supply Chain Manager](#212-supply-chain-manager)
+    - [2.12.1. Trivy](#2121-trivy)
 - [3. Troubleshoot](#3-troubleshoot)
   - [3.1. TODO](#31-todo)
 - [4. References](#4-references)
@@ -46,7 +47,10 @@ A collection of utility functions in C.
   > Git extension for managing large files (assets, binaries) outside normal Git history.
 
 - [Make](https://www.gnu.org/software/make/)
-  > Build automation tool used to define and run project tasks.
+  > Task automation tool to manage build processes and workflows.
+
+- [Docker](https://www.docker.com/)
+  > Containerization tool to run applications in isolated container environments and execute container-based tasks.
 
 ## 2. Contribute
 
@@ -61,8 +65,24 @@ AI Agents are automated tools that assist in various development tasks such as c
     - [AGENTS.md](AGENTS.md)
       > Instructions for AI coding agents working with the project.
 
-    - [SKILLS.md](.github/skills/README.md)
+    - [SKILL.md](.github/skills/README.md)
       > Instructions for AI agent skills used in the project.
+
+2. Usage and Instructions
+
+    - Implicit Invocation
+      > AI Agents can be implicitly invoked based on file paths, programming languages, or specific keywords in user prompts.
+
+      ```plaintext
+      .github/skills/<skill-name>/SKILL.md
+      ```
+
+    - Explicit Invocation
+      > AI Agents can be explicitly invoked by specifying the skill name in user prompts.
+
+      ```plaintext
+      @agent <skill-name> <task-description>
+      ```
 
 ### 2.2. Task Runner
 
@@ -338,9 +358,45 @@ AI Agents are automated tools that assist in various development tasks such as c
     - [.github/dependabot.yml](.github/dependabot.yml)
       > Configuration file for Dependabot specifying update rules and schedules.
 
-### 2.11. Supply Chain Manager
+### 2.11. Policy Manager
 
-#### 2.11.1. Trivy
+#### 2.11.1. Conftest
+
+[Conftest](https://www.conftest.dev/) is a **Policy as Code (PaC)** tool to streamline policy management for improved development, security and audit capability.
+
+1. Insights and Details
+
+    - [conftest.toml](conftest.toml)
+      > Configuration file for Conftest specifying policy paths and output formats.
+
+    - [tests/policy/](tests/policy/)
+      > Directory contains Rego policies for Conftest to enforce best practices and compliance standards.
+
+2. Usage and Instructions
+
+    - CI/CD
+
+      ```yaml
+      uses: sentenz/actions/regal@latest
+      ```
+
+      ```yaml
+      uses: sentenz/actions/conftest@latest
+      ```
+
+    - Tasks
+
+      ```bash
+      make policy-regal-lint <filepath>
+      ```
+
+      ```bash
+      make policy-conftest-test <filepath>
+      ```
+
+### 2.12. Supply Chain Manager
+
+#### 2.12.1. Trivy
 
 [Trivy](https://github.com/aquasecurity/trivy) is a comprehensive security scanner for vulnerabilities, misconfigurations, and compliance issues in container images, filesystems, and source code.
 
