@@ -100,7 +100,7 @@ jobs:
           ls -la docs/api/html/
 
       - name: Upload Documentation Artifact
-        uses: actions/upload-pages-artifact@v3.0.2
+        uses: actions/upload-pages-artifact@v4.0.0
         with:
           path: docs/api/html
 
