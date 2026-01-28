@@ -92,17 +92,17 @@ jobs:
 
       - name: Verify Documentation Output
         run: |
-          if [ ! -d "docs/api/html" ]; then
+          if [ ! -d "public/html" ]; then
             echo "Error: Documentation output directory not found!"
             exit 1
           fi
           echo "Documentation generated successfully."
-          ls -la docs/api/html/
+          ls -la public/html/
 
       - name: Upload Documentation Artifact
         uses: actions/upload-pages-artifact@v4.0.0
         with:
-          path: docs/api/html
+          path: public/html
 
   deploy:
     name: Doxygen Action - Deploy to GitHub Pages

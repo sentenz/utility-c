@@ -3,6 +3,7 @@
 ### Miscellaneous ###
 logs/
 build/
+public/
 
 ### VisualStudioCode ###
 .vscode/*
