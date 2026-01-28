@@ -1,5 +1,31 @@
 // SPDX-License-Identifier: Apache-2.0
 
+/**
+ * @file config.h
+ * @brief Project configuration and platform detection macros.
+ *
+ * This header provides configuration macros, platform detection, and
+ * common definitions used throughout the utility-c library. It handles
+ * differences between operating systems and environments.
+ *
+ * Platform Macros:
+ * - S_UNIX  : Defined when compiling on Unix-like systems
+ * - S_LINUX : Defined when compiling on Linux
+ * - S_POSIX : Defined when POSIX APIs are available (Unix or Linux)
+ *
+ * Standard Definitions:
+ * - UNUSED(x) : Suppresses unused parameter warnings
+ * - NULL      : Null pointer constant
+ * - NAME_MAX  : Maximum filename length
+ * - PATH_MAX  : Maximum path length
+ *
+ * @note This header should be included first in source files that need
+ *       platform-specific behavior.
+ *
+ * @warning Modifying these definitions may break compatibility across
+ *          platforms.
+ */
+
 #ifndef INCLUDE_UTILITY_C_CONFIG_H_
 #define INCLUDE_UTILITY_C_CONFIG_H_
 
@@ -7,80 +33,135 @@
 extern "C" {
 #endif
 
-/*
- * Standard definitions
+/**
+ * @brief Suppresses compiler warnings for unused parameters.
+ *
+ * Use this macro to explicitly mark function parameters as intentionally
+ * unused, preventing compiler warnings.
+ *
+ * @param x The unused parameter.
+ *
+ * @example
+ * @code
+ * void callback(void *ctx, int event) {
+ *     UNUSED(ctx);  // Context not needed in this implementation
+ *     handle_event(event);
+ * }
+ * @endcode
  */
-
-/* Ignore unused parameter */
 #if !defined(UNUSED)
   #define UNUSED(x) (void)(x)
 #endif
 
-/* Define NULL pointer */
+/**
+ * @brief Null pointer constant.
+ *
+ * Provides a portable definition of NULL if not already defined.
+ */
 #if !defined(NULL)
   #define NULL (void*)0
 #endif
 
-/* Define maximum length of file name */
+/**
+ * @brief Maximum length of a filename.
+ *
+ * Defines the maximum number of bytes in a filename (not including
+ * the path components). Default is 64 if not defined by the system.
+ */
 #if !defined(NAME_MAX)
   #define NAME_MAX 64
 #endif
 
-/*
- * Specific definitions
- */
+// === Project-Specific Definitions ===============================================================
 
-/* Define NULL character */
+/**
+ * @brief Null character constant.
+ *
+ * Provides a named constant for the null terminator character.
+ */
 #if !defined(S_NULL_CHAR) && !defined(S_NULL_CHAR)
   #define S_NULL_CHAR '\0'
 #endif
 
-/* Define unix */
+/**
+ * @brief Unix platform detection.
+ *
+ * Defined when compiling on a Unix-like operating system.
+ */
 #if defined(__unix__) && !defined(S_UNIX)
   #define S_UNIX
 #endif
 
-/* Define linux */
+/**
+ * @brief Linux platform detection.
+ *
+ * Defined when compiling on Linux.
+ */
 #if defined(__linux__) && !defined(S_LINUX)
   #define S_LINUX
 #endif
 
-/* Define posix */
+/**
+ * @brief POSIX compatibility detection.
+ *
+ * Defined when POSIX APIs are available (Unix or Linux systems).
+ * Used to conditionally include POSIX-specific headers and features.
+ */
 #if (defined(S_UNIX) || defined(S_LINUX)) && !defined(S_POSIX)
   #define S_POSIX
 #endif
 
-/* Define file system */
+/**
+ * @brief File system module activation flag.
+ *
+ * Enables file system operations throughout the library.
+ */
 #if !defined(S_FS)
   #define S_FS
 #endif
 
-/* Define regex library PCRE */
+/* Regex library selection (PCRE or PCRE2)
+ * Uncomment ONE of the following to select the regex library:
+ * #define S_PCRE
+ * #define S_PCRE2
+ * #define PCRE2_CODE_UNIT_WIDTH 8
+ */
 
-/* Define regex library PCRE2 */
-// #undef S_PCRE2
-// #undef PCRE2_CODE_UNIT_WIDTH 8
-
-/* Define maximum length of path */
+/**
+ * @brief Maximum path length.
+ *
+ * On non-Linux systems, defaults to _POSIX_PATH_MAX.
+ */
 #if !defined(S_LINUX)
   #define PATH_MAX _POSIX_PATH_MAX
 #endif
 
-/*
- * Macro check
- */
+// === Compile-Time Checks ========================================================================
 
-/* This macro checks the include module of regex */
+/**
+ * @brief Verifies HAVE_CONFIG_H is defined for PCRE support.
+ *
+ * The PCRE and PCRE2 libraries require HAVE_CONFIG_H to be defined
+ * for proper compilation.
+ */
 #if !defined(HAVE_CONFIG_H)
   #error "Macro 'HAVE_CONFIG_H' is needed in regex PCRE and PRCE2!"
 #endif
 
-/* Check regex module */
+/**
+ * @brief Ensures only one regex library is selected.
+ *
+ * Both S_PCRE and S_PCRE2 cannot be defined simultaneously.
+ */
 #if defined(S_PCRE) && defined(S_PCRE2)
   #error "Define only one regex library!"
 #endif
 
-/* This macro checks file system module */
+/**
+ * @brief Verifies file system module is enabled.
+ *
+ * The S_FS macro must be defined for file system operations.
+ */
 #if !defined(S_FS)
   #error "Check the file system activation macro 'S_FS'!"
 #endif

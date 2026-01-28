@@ -1,5 +1,33 @@
 // SPDX-License-Identifier: Apache-2.0
 
+/**
+ * @file mutex.h
+ * @brief Mutex (mutual exclusion) synchronization primitives.
+ *
+ * This module provides platform-independent mutex operations for thread
+ * synchronization. It abstracts the underlying threading library (POSIX
+ * pthreads or eCos) to provide a consistent API.
+ *
+ * @note On POSIX systems, this module wraps pthread_mutex_t.
+ * @note On eCos systems, this module wraps cyg_mutex_t.
+ *
+ * @warning Mutexes must be properly initialized before use.
+ * @warning Failing to unlock a mutex can lead to deadlocks.
+ *
+ * @example
+ * @code
+ * s_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;  // POSIX initialization
+ *
+ * void thread_safe_operation(void) {
+ *     if (mutex_lock(&mutex) == 0) {
+ *         // Critical section - only one thread can execute this at a time
+ *         perform_operation();
+ *         mutex_unlock(&mutex);
+ *     }
+ * }
+ * @endcode
+ */
+
 #ifndef INCLUDE_UTILITY_C_MUTEX_H_
 #define INCLUDE_UTILITY_C_MUTEX_H_
 
@@ -13,14 +41,46 @@
 extern "C" {
 #endif
 
-/// @brief Locks a mutex.
-/// @param mutex The mutex to lock.
-/// @return 0 on success, -1 on failure.
+/**
+ * @brief Acquires (locks) a mutex.
+ *
+ * Attempts to lock the mutex. If the mutex is already locked by another
+ * thread, the calling thread will block until the mutex becomes available.
+ *
+ * @param[in,out] mutex Pointer to the mutex to lock.
+ *
+ * @return 0 on success.
+ * @return -1 on failure (e.g., invalid mutex, deadlock detected).
+ *
+ * @pre @p mutex must be a valid, initialized mutex.
+ * @pre The current thread must not already hold the mutex (to avoid deadlock
+ *      with non-recursive mutexes).
+ *
+ * @post On success, the calling thread owns the mutex.
+ *
+ * @warning Ensure every mutex_lock() has a corresponding mutex_unlock().
+ *
+ * @see mutex_unlock
+ */
 int mutex_lock(s_mutex_t *mutex);
 
-/// @brief Unlocks a mutex.
-/// @param mutex The mutex to unlock.
-/// @return 0 on success, -1 on failure.
+/**
+ * @brief Releases (unlocks) a mutex.
+ *
+ * Releases the mutex, allowing other threads waiting on it to acquire it.
+ *
+ * @param[in,out] mutex Pointer to the mutex to unlock.
+ *
+ * @return 0 on success.
+ * @return -1 on failure (e.g., mutex not locked by calling thread).
+ *
+ * @pre @p mutex must be a valid mutex that is currently locked by the
+ *      calling thread.
+ *
+ * @post The mutex is released and available for other threads to acquire.
+ *
+ * @see mutex_lock
+ */
 int mutex_unlock(s_mutex_t *mutex);
 
 #ifdef __cplusplus
