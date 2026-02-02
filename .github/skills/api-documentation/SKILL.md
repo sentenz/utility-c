@@ -5,7 +5,7 @@ metadata:
   version: "1.2"
   activation:
     implicit: true
-    priority: 0
+    priority: 2
     triggers:
       - "doxygen"
       - "API docs"
@@ -41,6 +41,7 @@ Instructions for AI coding agents on adding Doxygen-compatible documentation com
   - [3.7. Enumerations](#37-enumerations)
   - [3.8. Grouping and Modules](#38-grouping-and-modules)
   - [3.9. Inheritance](#39-inheritance)
+  - [3.10. Formula Documentation](#310-formula-documentation)
 - [4. Workflow](#4-workflow)
 - [5. Style Guide](#5-style-guide)
 - [6. Template](#6-template)
@@ -51,6 +52,7 @@ Instructions for AI coding agents on adding Doxygen-compatible documentation com
   - [6.5. Member Variable Template](#65-member-variable-template)
   - [6.6. Enumeration Template](#66-enumeration-template)
   - [6.7. Module/Group Template](#67-modulegroup-template)
+  - [6.8. Formula Template](#68-formula-template)
 - [7. References](#7-references)
 
 ## 1. Benefits
@@ -204,6 +206,28 @@ Class hierarchies and inherited documentation.
 
 - Base Classes
   > Document inherited classes with `@copydoc` or `@copybrief` to reuse base class documentation.
+
+### 3.10. Formula Documentation
+
+Mathematical formulas using **LaTeX** syntax for algorithms and technical documentation.
+
+- Inline Formulas
+  > Use `\f$..\f$` for formulas that appear within running text (opens LaTeX math mode).
+
+- Inline Text-Mode Formulas
+  > Use `\f(...\f)` for LaTeX elements that don't require explicit math mode (e.g., logos like `\LaTeX`).
+
+- Displayed Formulas
+  > Use `\f[...\f]` for centered, unnumbered equations on separate lines.
+
+- Environment Formulas
+  > Use `\f{environment}{...\f}` for specific LaTeX environments (e.g., `eqnarray*`, `align`).
+
+- MathJax Alternative
+  > Enable `USE_MATHJAX` in Doxyfile for client-side formula rendering without requiring LaTeX installation.
+
+- Custom Macros
+  > Use `FORMULA_MACROFILE` configuration to define reusable LaTeX commands with `\newcommand`.
 
 ## 4. Workflow
 
@@ -449,9 +473,40 @@ enum class EnumName
 /** @} */  // End of module_name
 ```
 
+### 6.8. Formula Template
+
+```cpp
+/**
+ * @brief Calculates the Euclidean distance between two points.
+ *
+ * The distance between \f$(x_1,y_1)\f$ and \f$(x_2,y_2)\f$ is
+ * \f$\sqrt{(x_2-x_1)^2+(y_2-y_1)^2}\f$.
+ *
+ * For complex equations, use displayed formulas:
+ * \f[
+ *   d = \sqrt{\sum_{i=1}^{n}(p_i - q_i)^2}
+ * \f]
+ *
+ * Multi-line equations using eqnarray environment:
+ * \f{eqnarray*}{
+ *   E &=& mc^2 \\
+ *   F &=& ma
+ * \f}
+ *
+ * @param[in] x1 X-coordinate of the first point.
+ * @param[in] y1 Y-coordinate of the first point.
+ * @param[in] x2 X-coordinate of the second point.
+ * @param[in] y2 Y-coordinate of the second point.
+ *
+ * @return The Euclidean distance \f$d \geq 0\f$.
+ */
+double distance(double x1, double y1, double x2, double y2);
+```
+
 ## 7. References
 
 - Doxygen [Manual](https://www.doxygen.nl/manual/) guide.
 - Doxygen [Commands](https://www.doxygen.nl/manual/commands.html) reference.
 - Doxygen [Configuration](https://www.doxygen.nl/manual/config.html) reference.
+- Doxygen [Formulas](https://www.doxygen.nl/manual/formulas.html) reference.
 - Google C++ Style Guide [Comments](https://google.github.io/styleguide/cppguide.html#Comments) section.
