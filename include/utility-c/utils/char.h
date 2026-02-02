@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef INCLUDE_UTILITY_C_CHAR_H_
+#define INCLUDE_UTILITY_C_CHAR_H_
+
 /**
  * @file char.h
  * @brief String manipulation utilities.
@@ -12,7 +15,6 @@
  *
  * @warning Functions may return NULL on memory allocation failure or invalid input.
  *
- * @example
  * @code
  * // String validation
  * if (char_isValid(input) && !char_isEmpty(input)) {
@@ -29,10 +31,10 @@
  * char *path = char_concats("/home", "/", "user", "/", "file.txt", NULL);
  * char_free(path);
  * @endcode
+ *
+ * @copyright Copyright (c) 2023-2026 sentenz
+ * @license SPDX-License-Identifier: Apache-2.0
  */
-
-#ifndef INCLUDE_UTILITY_C_CHAR_H_
-#define INCLUDE_UTILITY_C_CHAR_H_
 
 #ifdef S_HAVE_CONFIG_H
   #include "utility-c/config.h"
@@ -210,7 +212,6 @@ char *char_fromNumber(const double n);
  *
  * @note The caller is responsible for freeing the memory using char_free().
  *
- * @example
  * @code
  * char *result = char_concats("Hello", " ", "World", "!", NULL);
  * // result = "Hello World!"
@@ -322,7 +323,6 @@ size_t char_occurrences(const char *str, const char *sub);
  * @note The caller is responsible for freeing the memory using char_free().
  * @note Based on https://github.com/stephenmathieson/str-replace.c
  *
- * @example
  * @code
  * char *result = char_replace("hello world", "world", "there", 1);
  * // result = "hello there"

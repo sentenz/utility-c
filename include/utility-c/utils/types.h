@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef INCLUDE_UTILITY_C_TYPES_H_
+#define INCLUDE_UTILITY_C_TYPES_H_
+
 /**
  * @file types.h
  * @brief Platform-independent type definitions.
@@ -12,7 +15,6 @@
  * @note On POSIX systems, mutex types wrap pthread_mutex_t.
  * @note On eCos systems, mutex types wrap cyg_mutex_t.
  *
- * @example
  * @code
  * #include "utility-c/utils/types.h"
  *
@@ -22,10 +24,12 @@
  * // On POSIX, this is equivalent to:
  * // pthread_mutex_t my_mutex;
  * @endcode
+ *
+ * @see mutex.h for mutex operations
+ *
+ * @copyright Copyright (c) 2023-2026 sentenz
+ * @license SPDX-License-Identifier: Apache-2.0
  */
-
-#ifndef INCLUDE_UTILITY_C_TYPES_H_
-#define INCLUDE_UTILITY_C_TYPES_H_
 
 #ifdef S_HAVE_CONFIG_H
   #include "utility-c/config.h"

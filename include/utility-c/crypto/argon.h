@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef INCLUDE_UTILITY_C_CRYPTO_ARGON_H_
+#define INCLUDE_UTILITY_C_CRYPTO_ARGON_H_
+
 /**
  * @file argon.h
  * @brief Argon2 password hashing functions.
@@ -8,12 +11,6 @@
  * algorithm, which won the Password Hashing Competition in 2015. Argon2 is
  * designed to be resistant to GPU-based attacks and side-channel attacks.
  *
- * @note For most use cases, prefer the higher-level password.h interface.
- * @note This implementation uses Argon2id variant for optimal security.
- *
- * @warning Incorrect use of cryptographic functions can compromise security.
- *          Ensure you understand the parameters before modifying defaults.
- *
  * Algorithm Parameters:
  * - Salt size: 16 bytes (128 bits) - sufficient randomness
  * - Hash size: 32 bytes (256 bits) - secure output length
@@ -21,7 +18,12 @@
  * - Memory: 8 KB - memory cost (increase for better GPU resistance)
  * - Threads: 1 - parallelism factor
  *
- * @example
+ * @note For most use cases, prefer the higher-level password.h interface.
+ * @note This implementation uses Argon2id variant for optimal security.
+ *
+ * @warning Incorrect use of cryptographic functions can compromise security.
+ *          Ensure you understand the parameters before modifying defaults.
+ *
  * @code
  * unsigned char salt[ARGON2_SALT_SIZE];
  * unsigned char encoded[ARGON2_ENCODED_SIZE];
@@ -42,10 +44,10 @@
  *
  * @see https://github.com/P-H-C/phc-winner-argon2
  * @see https://datatracker.ietf.org/doc/html/rfc9106
+ *
+ * @copyright Copyright (c) 2023-2026 sentenz
+ * @license SPDX-License-Identifier: Apache-2.0
  */
-
-#ifndef INCLUDE_UTILITY_C_CRYPTO_ARGON_H_
-#define INCLUDE_UTILITY_C_CRYPTO_ARGON_H_
 
 /**
  * @brief Size of the salt in bytes.
@@ -106,8 +108,8 @@ extern "C" {
  * @param[out] salt Buffer to store the generated salt.
  *                  Must be at least ARGON2_SALT_SIZE bytes.
  *
- * @return 0 on success.
- * @return -1 on failure (e.g., random source unavailable).
+ * @retval 0  Success - salt buffer filled with random bytes.
+ * @retval -1 Failure (e.g., random source unavailable).
  *
  * @pre @p salt must point to a buffer of at least ARGON2_SALT_SIZE bytes.
  *
@@ -128,8 +130,8 @@ int argon2_generateSalt(unsigned char *salt);
  *                     Must be at least ARGON2_SALT_SIZE bytes.
  * @param[in]  encoded The null-terminated encoded Argon2 hash string.
  *
- * @return 0 on success.
- * @return -1 on failure (e.g., invalid encoded format).
+ * @retval 0  Success - salt extracted to buffer.
+ * @retval -1 Failure (e.g., invalid encoded format).
  *
  * @pre @p salt must point to a buffer of at least ARGON2_SALT_SIZE bytes.
  * @pre @p encoded must be a valid Argon2 encoded hash string.
@@ -149,8 +151,8 @@ int argon2_extractSalt(unsigned char *salt, const char *encoded);
  * @param[out] encoded  Buffer to store the encoded hash.
  *                      Must be at least ARGON2_ENCODED_SIZE bytes.
  *
- * @return 0 on success.
- * @return -1 on failure (e.g., memory allocation error).
+ * @retval 0  Success - password hashed and stored in encoded buffer.
+ * @retval -1 Failure (e.g., memory allocation error).
  *
  * @pre @p password must be a valid null-terminated string.
  * @pre @p salt must contain ARGON2_SALT_SIZE bytes.
@@ -175,8 +177,8 @@ int argon2_hashPassword(const char *password, unsigned char *salt, unsigned char
  * @param[in] password The null-terminated password to verify.
  * @param[in] encoded  The null-terminated encoded Argon2 hash.
  *
- * @return 0 if the password matches the hash.
- * @return -1 if the password does not match or an error occurred.
+ * @retval 0  Password matches the hash (verification successful).
+ * @retval -1 Password does not match or an error occurred.
  *
  * @pre @p password must be a valid null-terminated string.
  * @pre @p encoded must be a valid Argon2 encoded hash string.

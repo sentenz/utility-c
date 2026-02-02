@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef INCLUDE_UTILITY_C_URI_H_
+#define INCLUDE_UTILITY_C_URI_H_
+
 /**
  * @file uri.h
  * @brief URI (Uniform Resource Identifier) parsing utilities.
@@ -25,7 +28,6 @@
  *   - fragment: "section"
  * @endcode
  *
- * @example
  * @code
  * const char *url = "https://api.example.com:443/v1/users?id=123#details";
  *
@@ -46,10 +48,10 @@
  * @endcode
  *
  * @see https://datatracker.ietf.org/doc/html/rfc3986
+ *
+ * @copyright Copyright (c) 2023-2026 sentenz
+ * @license SPDX-License-Identifier: Apache-2.0
  */
-
-#ifndef INCLUDE_UTILITY_C_URI_H_
-#define INCLUDE_UTILITY_C_URI_H_
 
 #ifdef S_HAVE_CONFIG_H
   #include "utility-c/config.h"
@@ -76,7 +78,6 @@ extern "C" {
  *
  * @note The caller is responsible for freeing the returned string using free().
  *
- * @example
  * @code
  * char *scheme = uri_scheme("https://example.com");
  * // scheme = "https"
@@ -99,7 +100,6 @@ char *uri_scheme(const char *str);
  *
  * @note The caller is responsible for freeing the returned string using free().
  *
- * @example
  * @code
  * char *host = uri_host("https://www.example.com:8080/path");
  * // host = "www.example.com"
@@ -124,7 +124,6 @@ char *uri_host(const char *str);
  * @note Default ports (80 for http, 443 for https) are typically not
  *       included in URIs and will return NULL.
  *
- * @example
  * @code
  * char *port = uri_port("https://example.com:8443/api");
  * // port = "8443"
@@ -150,7 +149,6 @@ char *uri_port(const char *str);
  *
  * @warning Including passwords in URIs is deprecated for security reasons.
  *
- * @example
  * @code
  * char *user = uri_user("ftp://admin@files.example.com");
  * // user = "admin"
@@ -174,7 +172,6 @@ char *uri_user(const char *str);
  * @note The caller is responsible for freeing the returned string using free().
  * @note The returned string may be URL-encoded and require decoding.
  *
- * @example
  * @code
  * char *query = uri_query("https://search.example.com?q=hello&lang=en");
  * // query = "q=hello&lang=en"
@@ -199,7 +196,6 @@ char *uri_query(const char *str);
  * @note The caller is responsible for freeing the returned string using free().
  * @note Fragments are typically processed client-side and not sent to servers.
  *
- * @example
  * @code
  * char *fragment = uri_fragment("https://docs.example.com/guide#installation");
  * // fragment = "installation"
@@ -223,7 +219,6 @@ char *uri_fragment(const char *str);
  * @note The caller is responsible for freeing the returned string using free().
  * @note The returned path includes the leading '/' if present.
  *
- * @example
  * @code
  * char *path = uri_path("https://api.example.com/v2/users/123?format=json");
  * // path = "/v2/users/123"

@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef INCLUDE_UTILITY_C_CONFIG_H_
+#define INCLUDE_UTILITY_C_CONFIG_H_
+
 /**
  * @file config.h
  * @brief Project configuration and platform detection macros.
@@ -24,10 +27,10 @@
  *
  * @warning Modifying these definitions may break compatibility across
  *          platforms.
+ *
+ * @copyright Copyright (c) 2023-2026 sentenz
+ * @license SPDX-License-Identifier: Apache-2.0
  */
-
-#ifndef INCLUDE_UTILITY_C_CONFIG_H_
-#define INCLUDE_UTILITY_C_CONFIG_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,7 +44,6 @@ extern "C" {
  *
  * @param x The unused parameter.
  *
- * @example
  * @code
  * void callback(void *ctx, int event) {
  *     UNUSED(ctx);  // Context not needed in this implementation

@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef INCLUDE_UTILITY_C_UTIL_H_
+#define INCLUDE_UTILITY_C_UTIL_H_
+
 /**
  * @file util.h
  * @brief General utility functions for numeric operations.
@@ -11,7 +14,6 @@
  * @note Floating-point comparisons use epsilon-based techniques to handle
  *       rounding errors that occur in IEEE 754 floating-point representations.
  *
- * @example
  * @code
  * // Check if a number has a fractional part
  * if (util_isFloat(3.14)) {
@@ -30,10 +32,10 @@
  * @endcode
  *
  * @see https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
+ *
+ * @copyright Copyright (c) 2023-2026 sentenz
+ * @license SPDX-License-Identifier: Apache-2.0
  */
-
-#ifndef INCLUDE_UTILITY_C_UTIL_H_
-#define INCLUDE_UTILITY_C_UTIL_H_
 
 #ifdef S_HAVE_CONFIG_H
   #include "utility-c/config.h"
@@ -61,7 +63,6 @@ extern "C" {
  * @return @c true if @p n has a non-zero fractional part.
  * @return @c false if @p n is effectively an integer.
  *
- * @example
  * @code
  * util_isFloat(3.14);   // true
  * util_isFloat(3.0);    // false
@@ -80,7 +81,6 @@ bool util_isFloat(const double n);
  *
  * @return The number of digits in @p n (minimum 1 for zero).
  *
- * @example
  * @code
  * util_countDigits(12345);   // 5
  * util_countDigits(0);       // 1
@@ -138,7 +138,6 @@ int util_countNumber(const double n);
  * @note Use this when comparing numbers that may have accumulated
  *       floating-point errors during computation.
  *
- * @example
  * @code
  * float result = some_calculation();  // Expected ~1.0
  * if (util_approximatelyEqual(result, 1.0f, 1e-5f)) {
@@ -184,7 +183,6 @@ bool util_essentiallyEqual(float a, float b, float epsilon);
  * @return @c false if @p a is less than, equal to, or only approximately
  *         greater than @p b.
  *
- * @example
  * @code
  * if (util_definitelyGreaterThan(price, threshold, 1e-5f)) {
  *     printf("Price exceeds threshold\n");

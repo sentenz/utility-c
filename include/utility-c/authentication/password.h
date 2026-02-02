@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef INCLUDE_UTILITY_C_AUTHENTICATION_PASSWORD_H_
+#define INCLUDE_UTILITY_C_AUTHENTICATION_PASSWORD_H_
+
 /**
  * @file password.h
  * @brief Password hashing and verification utilities.
@@ -9,13 +12,12 @@
  * hashing algorithm (typically Argon2) that is resistant to brute-force
  * attacks.
  *
- * @warning Never store passwords in plain text. Always use password_hash()
- *          to create a secure hash before storage.
- *
  * @note Password hashes are designed to be stored as strings and include
  *       all necessary parameters for verification.
  *
- * @example
+ * @warning Never store passwords in plain text. Always use password_hash()
+ *          to create a secure hash before storage.
+ *
  * @code
  * // Registering a new user
  * const char *password = "user_password";
@@ -37,10 +39,10 @@
  * @endcode
  *
  * @see argon.h for lower-level Argon2 functions
+ *
+ * @copyright Copyright (c) 2023-2026 sentenz
+ * @license SPDX-License-Identifier: Apache-2.0
  */
-
-#ifndef INCLUDE_UTILITY_C_AUTHENTICATION_PASSWORD_H_
-#define INCLUDE_UTILITY_C_AUTHENTICATION_PASSWORD_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,8 +90,8 @@ char *password_hash(const char *password);
  * @param[in] hash     The null-terminated hash string to verify against
  *                     (as returned by password_hash()).
  *
- * @return 1 if the password matches the hash.
- * @return 0 if the password does not match or an error occurred.
+ * @retval 1 Password matches the hash (authentication successful).
+ * @retval 0 Password does not match or an error occurred.
  *
  * @pre @p password must be a valid null-terminated string.
  * @pre @p hash must be a valid hash string produced by password_hash().

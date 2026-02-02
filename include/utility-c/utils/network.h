@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef INCLUDE_UTILITY_C_NETWORK_H_
+#define INCLUDE_UTILITY_C_NETWORK_H_
+
 /**
  * @file network.h
  * @brief Network configuration and system identity utilities.
@@ -13,7 +16,6 @@
  *
  * @warning Incorrect network configuration can result in loss of connectivity.
  *
- * @example
  * @code
  * // Get current network configuration
  * char *ip = network_getIpv4Address("eth0");
@@ -29,10 +31,10 @@
  * // Configure a static IP (requires root)
  * network_setIpv4Network("192.168.1.100", "255.255.255.0", "192.168.1.1");
  * @endcode
+ *
+ * @copyright Copyright (c) 2023-2026 sentenz
+ * @license SPDX-License-Identifier: Apache-2.0
  */
-
-#ifndef INCLUDE_UTILITY_C_NETWORK_H_
-#define INCLUDE_UTILITY_C_NETWORK_H_
 
 #ifdef S_HAVE_CONFIG_H
   #include "utility-c/config.h"
@@ -53,9 +55,9 @@ extern "C" {
  *                      (e.g., "192.168.1.100").
  * @param[in] interface The name of the network interface (e.g., "eth0").
  *
- * @return 0 on success.
- * @return -1 on failure (e.g., invalid address, interface not found,
- *         insufficient privileges).
+ * @retval 0  Success - IP address configured.
+ * @retval -1 Failure (e.g., invalid address, interface not found,
+ *            insufficient privileges).
  *
  * @pre @p ip must be a valid IPv4 address string.
  * @pre @p interface must be a valid network interface name.
@@ -109,8 +111,8 @@ char *network_getIpv6Address(const char *interface);
  *                      (e.g., "255.255.255.0").
  * @param[in] interface The name of the network interface (e.g., "eth0").
  *
- * @return 0 on success.
- * @return -1 on failure (e.g., invalid netmask, interface not found).
+ * @retval 0  Success - netmask configured.
+ * @retval -1 Failure (e.g., invalid netmask, interface not found).
  *
  * @pre @p netmask must be a valid IPv4 subnet mask.
  * @pre Caller typically needs root/administrator privileges.
@@ -160,8 +162,8 @@ char *network_getIpv4Gateway();
  * @param[in] netmask The IPv4 netmask in dotted-decimal notation.
  * @param[in] gateway The IPv4 gateway address in dotted-decimal notation.
  *
- * @return 0 on success.
- * @return -1 on failure.
+ * @retval 0  Success - network settings configured.
+ * @retval -1 Failure.
  *
  * @pre All parameters must be valid IPv4 addresses.
  * @pre Caller typically needs root/administrator privileges.
@@ -177,8 +179,8 @@ int network_setIpv4Network(const char *ip, const char *netmask, const char *gate
  *
  * @param[in] hostname The new hostname to set.
  *
- * @return 0 on success.
- * @return -1 on failure (e.g., invalid hostname, insufficient privileges).
+ * @retval 0  Success - hostname changed.
+ * @retval -1 Failure (e.g., invalid hostname, insufficient privileges).
  *
  * @pre @p hostname must be a valid hostname (alphanumeric with hyphens,
  *      not starting or ending with a hyphen).
@@ -211,8 +213,8 @@ char *network_getHostname();
  *
  * @param[in] username The new username to set.
  *
- * @return 0 on success.
- * @return -1 on failure (e.g., invalid username, insufficient privileges).
+ * @retval 0  Success - username changed.
+ * @retval -1 Failure (e.g., invalid username, insufficient privileges).
  *
  * @pre Caller typically needs root/administrator privileges.
  *

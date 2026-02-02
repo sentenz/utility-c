@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef INCLUDE_UTILITY_C_MUTEX_H_
+#define INCLUDE_UTILITY_C_MUTEX_H_
+
 /**
  * @file mutex.h
  * @brief Mutex (mutual exclusion) synchronization primitives.
@@ -14,7 +17,6 @@
  * @warning Mutexes must be properly initialized before use.
  * @warning Failing to unlock a mutex can lead to deadlocks.
  *
- * @example
  * @code
  * s_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;  // POSIX initialization
  *
@@ -26,10 +28,12 @@
  *     }
  * }
  * @endcode
+ *
+ * @see types.h for the s_mutex_t type definition
+ *
+ * @copyright Copyright (c) 2023-2026 sentenz
+ * @license SPDX-License-Identifier: Apache-2.0
  */
-
-#ifndef INCLUDE_UTILITY_C_MUTEX_H_
-#define INCLUDE_UTILITY_C_MUTEX_H_
 
 #ifdef S_HAVE_CONFIG_H
   #include "utility-c/config.h"
@@ -49,8 +53,8 @@ extern "C" {
  *
  * @param[in,out] mutex Pointer to the mutex to lock.
  *
- * @return 0 on success.
- * @return -1 on failure (e.g., invalid mutex, deadlock detected).
+ * @retval 0  Success - mutex acquired.
+ * @retval -1 Failure (e.g., invalid mutex, deadlock detected).
  *
  * @pre @p mutex must be a valid, initialized mutex.
  * @pre The current thread must not already hold the mutex (to avoid deadlock
@@ -71,8 +75,8 @@ int mutex_lock(s_mutex_t *mutex);
  *
  * @param[in,out] mutex Pointer to the mutex to unlock.
  *
- * @return 0 on success.
- * @return -1 on failure (e.g., mutex not locked by calling thread).
+ * @retval 0  Success - mutex released.
+ * @retval -1 Failure (e.g., mutex not locked by calling thread).
  *
  * @pre @p mutex must be a valid mutex that is currently locked by the
  *      calling thread.

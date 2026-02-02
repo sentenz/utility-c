@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef INCLUDE_UTILITY_C_REGEX_H_
+#define INCLUDE_UTILITY_C_REGEX_H_
+
 /**
  * @file regex.h
  * @brief Regular expression pattern matching utilities.
@@ -13,7 +16,6 @@
  *
  * @warning Complex patterns may impact performance on large strings.
  *
- * @example
  * @code
  * // Simple pattern matching
  * if (regex_match("^[a-z]+$", "hello")) {
@@ -36,10 +38,10 @@
  * @endcode
  *
  * @see https://www.pcre.org/original/doc/html/pcrepattern.html for pattern syntax
+ *
+ * @copyright Copyright (c) 2023-2026 sentenz
+ * @license SPDX-License-Identifier: Apache-2.0
  */
-
-#ifndef INCLUDE_UTILITY_C_REGEX_H_
-#define INCLUDE_UTILITY_C_REGEX_H_
 
 #ifdef S_HAVE_CONFIG_H
   #include "utility-c/config.h"
@@ -79,7 +81,6 @@ extern "C" {
  *
  * @note Based on https://github.com/vmg/pcre/blob/master/pcredemo.c
  *
- * @example
  * @code
  * // Email validation
  * bool valid = regex_match("^[\\w.-]+@[\\w.-]+\\.[a-z]{2,}$", email);
@@ -110,7 +111,6 @@ bool regex_match(const char *pattern, const char *str);
  *
  * @note The caller is responsible for freeing the returned string using free().
  *
- * @example
  * @code
  * // Extract first number from text
  * char *num = regex_find("[0-9]+", "Order #12345 placed");
@@ -148,7 +148,6 @@ char *regex_find(const char *pattern, const char *str);
  * @note The caller is responsible for freeing the returned string using free().
  * @note The delimiter patterns themselves are not included in the result.
  *
- * @example
  * @code
  * // Extract HTML tag content
  * char *title = regex_between(

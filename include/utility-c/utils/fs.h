@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef INCLUDE_UTILITY_C_FS_H_
+#define INCLUDE_UTILITY_C_FS_H_
+
 /**
  * @file fs.h
  * @brief File system utilities.
@@ -13,7 +16,6 @@
  * @warning File operations may fail due to permission issues, disk space
  *          limitations, or other system-level constraints.
  *
- * @example
  * @code
  * // Create a directory and file
  * fs_createDirectory("/tmp/mydir", 0755);
@@ -28,10 +30,10 @@
  * fs_removeFile("/tmp/mydir", "config.txt");
  * fs_removeDirectory("/tmp/mydir");
  * @endcode
+ *
+ * @copyright Copyright (c) 2023-2026 sentenz
+ * @license SPDX-License-Identifier: Apache-2.0
  */
-
-#ifndef INCLUDE_UTILITY_C_FS_H_
-#define INCLUDE_UTILITY_C_FS_H_
 
 #ifdef S_HAVE_CONFIG_H
   #include "utility-c/config.h"

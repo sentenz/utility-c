@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef INCLUDE_UTILITY_C_XML_H_
+#define INCLUDE_UTILITY_C_XML_H_
+
 /**
  * @file xml.h
  * @brief XML parsing and manipulation utilities.
@@ -14,7 +17,6 @@
  * @warning XML operations may fail silently on malformed input. Always check
  *          return values.
  *
- * @example
  * @code
  * // Parse XML from string
  * const char *xml_data = "<?xml version=\"1.0\"?><config><id>123</id></config>";
@@ -34,10 +36,10 @@
  * @endcode
  *
  * @see https://www.msweet.org/mxml/
+ *
+ * @copyright Copyright (c) 2023-2026 sentenz
+ * @license SPDX-License-Identifier: Apache-2.0
  */
-
-#ifndef INCLUDE_UTILITY_C_XML_H_
-#define INCLUDE_UTILITY_C_XML_H_
 
 #ifdef S_HAVE_CONFIG_H
   #include "utility-c/config.h"
@@ -70,7 +72,6 @@ extern "C" {
  *
  * @note The caller is responsible for freeing the returned tree using xml_free().
  *
- * @example
  * @code
  * mxml_node_t *tree = xml_fromString("<root><item>value</item></root>");
  * if (tree) {

@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef INCLUDE_UTILITY_C_BIT_H_
+#define INCLUDE_UTILITY_C_BIT_H_
+
 /**
  * @file bit.h
  * @brief Bit manipulation utilities.
@@ -10,7 +13,6 @@
  * @note Bit positions are zero-indexed, where position 0 represents the least
  *       significant bit (LSB).
  *
- * @example
  * @code
  * int flags = 0;
  * bit_set(&flags, 0);                 // Set bit 0: flags = 0b0001
@@ -19,10 +21,10 @@
  * bit_toggle(&flags, 0);              // Toggle bit 0: flags = 0b0100
  * bit_unset(&flags, 2);               // Unset bit 2: flags = 0b0000
  * @endcode
+ *
+ * @copyright Copyright (c) 2023-2026 sentenz
+ * @license SPDX-License-Identifier: Apache-2.0
  */
-
-#ifndef INCLUDE_UTILITY_C_BIT_H_
-#define INCLUDE_UTILITY_C_BIT_H_
 
 #ifdef S_HAVE_CONFIG_H
   #include "utility-c/config.h"
