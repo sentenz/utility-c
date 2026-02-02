@@ -69,7 +69,7 @@ jobs:
             sed -i 's/^GENERATE_HTML.*=.*/GENERATE_HTML          = YES/' Doxyfile
             sed -i 's/^GENERATE_LATEX.*=.*/GENERATE_LATEX         = NO/' Doxyfile
             sed -i 's/^GENERATE_XML.*=.*/GENERATE_XML           = NO/' Doxyfile
-            sed -i 's/^HTML_OUTPUT.*=.*/HTML_OUTPUT            = html/' Doxyfile
+            sed -i 's/^HTML_OUTPUT.*=.*/HTML_OUTPUT            = .' Doxyfile
             sed -i 's/^HAVE_DOT.*=.*/HAVE_DOT               = YES/' Doxyfile
             sed -i 's/^DOT_IMAGE_FORMAT.*=.*/DOT_IMAGE_FORMAT       = svg/' Doxyfile
             sed -i 's/^INTERACTIVE_SVG.*=.*/INTERACTIVE_SVG        = YES/' Doxyfile
@@ -92,17 +92,17 @@ jobs:
 
       - name: Verify Documentation Output
         run: |
-          if [ ! -d "public/html" ]; then
+          if [ ! -d "public/" ]; then
             echo "Error: Documentation output directory not found!"
             exit 1
           fi
           echo "Documentation generated successfully."
-          ls -la public/html/
+          ls -la public/
 
       - name: Upload Documentation Artifact
         uses: actions/upload-pages-artifact@v4.0.0
         with:
-          path: public/html
+          path: public/
 
   deploy:
     name: Doxygen Action - Deploy to GitHub Pages
