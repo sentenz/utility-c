@@ -116,19 +116,19 @@ analysis-dynamic-coverage:
 
 POLICY_IMAGE_CONFTEST ?= docker.io/openpolicyagent/conftest:v0.65.0@sha256:afa510df6d4562ebe24fb3e457da6f6d6924124140a13b51b950cc6cb1d25525
 
-# Usage: make policy-conftest-test <filepath>
+# Usage: make policy-conftest-run <filepath>
 #
 ## Run Conftest container in REPL (Read-Eval-Print-Loop) to evaluate policies against input data and generate a report
-policy-conftest-test:
+policy-conftest-run:
 	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
-		echo "usage: make policy-conftest-test <filepath>"; \
+		echo "usage: make policy-conftest-run <filepath>"; \
 		exit 1; \
 	fi
 
 	@mkdir -p logs/policy
 
 	docker run --rm -v "$$(pwd)":/workspace -w /workspace "$(POLICY_IMAGE_CONFTEST)" test "$(filter-out $@,$(MAKECMDGOALS))" > logs/policy/conftest-report.json 2>&1
-.PHONY: policy-conftest-test
+.PHONY: policy-conftest-run
 
 POLICY_IMAGE_REGAL ?= ghcr.io/openpolicyagent/regal:0.37.0@sha256:a09884658f3c8c9cc30de136b664b3afdb7927712927184ba891a155a9676050
 
@@ -334,19 +334,19 @@ sast-cosign-verify:
 	docker run --rm -v "${HOME}/.docker/config.json:/root/.docker/config.json" -v "${PWD}:/workspace" -w /workspace "$(SAST_IMAGE_COSIGN)" verify-attestation --key cosign.pub --type cyclonedx "$(filter-out $@,$(MAKECMDGOALS))" > logs/sbom/sbom.cdx.intoto.jsonl 2> logs/sast/cosign-verify.log
 .PHONY: sast-cosign-verify
 
-# ── SSG Manager ────────────────────────────────────────────────────────────────────────────────
+# ── Documentation Generators ─────────────────────────────────────────────────────────────────────
 
 ## Generate Content using Static Site Generator (SSG) for Doxygen documentation
-ssg-doxygen-generate:
+pages-doxygen-generate:
 	@doxygen Doxyfile
-.PHONY: ssg-doxygen-generate
+.PHONY: pages-doxygen-generate
 
 ## Serve the generated Static Site Generator (SSG) for Doxygen documentation on a local web server
-ssg-doxygen-serve:
+pages-doxygen-serve:
 	@OUT="$$(awk -F'= *' '/^OUTPUT_DIRECTORY/ {gsub(/^[ \t]+|[ \t]+$$/,"",$$2); print $$2; exit}' Doxyfile 2>/dev/null)"; \
 	HTML="$$(awk -F'= *' '/^HTML_OUTPUT/ {gsub(/^[ \t]+|[ \t]+$$/,"",$$2); print $$2; exit}' Doxyfile 2>/dev/null)"; \
 	OUTDIR="$${OUT:+$${OUT}/}$${HTML:-html}"; \
-	if [ ! -d "$$OUTDIR" ]; then echo "error: generated docs not found in $$OUTDIR; run 'make ssg-doxygen-generate' first" >&2; exit 1; fi; \
+	if [ ! -d "$$OUTDIR" ]; then echo "error: generated docs not found in $$OUTDIR; run 'make pages-doxygen-generate' first" >&2; exit 1; fi; \
 	echo "Serving $$OUTDIR at http://localhost:8000"; \
 	python3 -m http.server --directory "$$OUTDIR" 8000
-.PHONY: ssg-doxygen-serve
+.PHONY: pages-doxygen-serve

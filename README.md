@@ -32,8 +32,8 @@ Provides a C language utility library with various helper functions and data str
     - [2.11.1. Conftest](#2111-conftest)
   - [2.12. Supply Chain Manager](#212-supply-chain-manager)
     - [2.12.1. Trivy](#2121-trivy)
-  - [2.15. Static Site Generator (SSG) Manager](#215-static-site-generator-ssg-manager)
-    - [2.15.1. Doxygen](#2151-doxygen)
+  - [2.13. Documentation Generators](#213-documentation-generators)
+    - [2.13.1. Doxygen](#2131-doxygen)
 - [3. Troubleshoot](#3-troubleshoot)
   - [3.1. TODO](#31-todo)
 - [4. References](#4-references)
@@ -393,7 +393,7 @@ AI Agents are automated tools that assist in various development tasks such as c
       ```
 
       ```bash
-      make policy-conftest-test <filepath>
+      make policy-conftest-run <filepath>
       ```
 
 ### 2.12. Supply Chain Manager
@@ -436,11 +436,11 @@ AI Agents are automated tools that assist in various development tasks such as c
       make sast-trivy-sbom-license <sbom_path>
       ```
 
-### 2.15. Static Site Generator (SSG) Manager
+### 2.13. Documentation Generators
 
-#### 2.15.1. Doxygen
+#### 2.13.1. Doxygen
 
-[Doxygen](https://www.doxygen.nl/) is a documentation generator for C++, C programming languages, used to create software reference documentation from annotated source code.
+[Doxygen](https://www.doxygen.nl/) is an **API Documentation Generator** for C++, C programming languages, used to create software reference documentation from annotated source code.
 
 1. Insights and Details
 
@@ -458,11 +458,11 @@ AI Agents are automated tools that assist in various development tasks such as c
     - Tasks
 
       ```bash
-      make ssg-doxygen-generate
+      make pages-doxygen-generate
       ```
 
       ```bash
-      make ssg-doxygen-server
+      make pages-doxygen-server
       ```
 
 ## 3. Troubleshoot
