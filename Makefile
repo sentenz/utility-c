@@ -441,14 +441,14 @@ pages-doxygen-serve:
 	python3 -m http.server --directory "$$OUTDIR" 8000
 .PHONY: pages-doxygen-serve
 
-# ── Skills Manager ──────────────────────────────────────────────────────────────────────────────
+# ── Skills Manager ───────────────────────────────────────────────────────────────────────────────
 
 ## Add sentenz/skills to the project
 skills-add:
-	npx skills add sentenz/skills
+	skills add sentenz/skills
 .PHONY: skills-add
 
 ## Update sentenz/skills in the project
 skills-update:
-	npx skills update sentenz/skills
+	skills update sentenz/skills
 .PHONY: skills-update
