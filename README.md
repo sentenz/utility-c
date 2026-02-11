@@ -18,14 +18,32 @@ Provides a C language utility library with various helper functions and data str
 - [Git](https://git-scm.com/)
   > Distributed version control system for tracking source code changes.
 
+  ```bash
+  sudo apt install git
+  ```
+
 - [Git LFS](https://git-lfs.com/)
   > Git extension for managing large files (assets, binaries) outside normal Git history.
+
+  ```bash
+  sudo apt install git-lfs
+  git lfs install
+  ```
 
 - [Make](https://www.gnu.org/software/make/)
   > Task automation tool to manage build processes and workflows.
 
+  ```bash
+  sudo apt install make
+  ```
+
 - [Docker](https://www.docker.com/)
   > Containerization tool to run applications in isolated container environments and execute container-based tasks.
+
+  ```bash
+  sudo apt install docker.io
+  sudo usermod -aG docker $USER
+  ```
 
 ## 2. Contribute
 
