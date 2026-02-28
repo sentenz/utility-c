@@ -6,6 +6,7 @@ Provides a C language utility library with various helper functions and data str
 
 - [1. Details](#1-details)
   - [1.1. Prerequisites](#11-prerequisites)
+  - [1.2. Usage](#12-usage)
 - [2. Contribute](#2-contribute)
 - [3. Troubleshoot](#3-troubleshoot)
   - [3.1. TODO](#31-todo)
@@ -44,6 +45,10 @@ Provides a C language utility library with various helper functions and data str
   sudo apt install docker.io
   sudo usermod -aG docker $USER
   ```
+
+### 1.2. Usage
+
+> TODO Add usage instructions and examples for the utility library
 
 ## 2. Contribute
 
