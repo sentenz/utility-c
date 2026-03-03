@@ -117,10 +117,10 @@ function(meta_unity)
         # argv[1] and calls the matching suite function (e.g., RunTests_<suite>()).
         foreach(meta_suite IN LISTS ARG_SUITES)
             add_test(
-                NAME "${meta_suite}"
+                NAME "${ARG_TARGET}.${meta_suite}"
                 COMMAND "${meta_unity_jrun_exe}" ${meta_jrun_args} --args "${meta_suite}" "${meta_elf_file}"
             )
-            set_tests_properties("${meta_suite}" PROPERTIES TIMEOUT "${ARG_TIMEOUT}")
+            set_tests_properties("${ARG_TARGET}.${meta_suite}" PROPERTIES TIMEOUT "${ARG_TIMEOUT}")
         endforeach()
     else()
         # Register a single CTest test for the whole target binary
