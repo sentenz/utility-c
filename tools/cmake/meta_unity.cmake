@@ -73,8 +73,11 @@ function(meta_unity)
         message(WARNING "${CMAKE_CURRENT_FUNCTION}: 'BUILD_TESTING' must be enabled e.g., include(CTest).")
     endif()
 
-    # Find J-Run executable; result is cached so repeated calls reuse the detected path
-    find_program(meta_unity_jrun_exe NAMES JRun jrun)
+    # Find J-Run executable; the result is stored in the CMake cache (FILEPATH) so
+    # repeated calls to this function reuse the value without re-searching the PATH
+    if(NOT meta_unity_jrun_exe)
+        find_program(meta_unity_jrun_exe NAMES JRun jrun)
+    endif()
     if(NOT meta_unity_jrun_exe)
         message(WARNING "${CMAKE_CURRENT_FUNCTION}: 'JRun' not found. On-target Unity tests will be disabled.")
         return()
