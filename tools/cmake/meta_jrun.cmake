@@ -1,8 +1,13 @@
 include_guard(GLOBAL)
 
 # Description:
-#   Registers a pre-built firmware executable as a CTest test via SEGGER J-Run.
+#   Registers a pre-built firmware executable as CTest test(s) via SEGGER J-Run.
 #   J-Run flashes the ELF to the connected embedded target and captures output.
+#   When SUITES are provided, each suite is registered as a separate CTest test
+#   with the suite name forwarded via J-Run --args so that the firmware's test
+#   dispatcher can select and run only that suite.
+#   When no SUITES are specified, a single CTest test is registered for the
+#   entire firmware binary.
 #
 # Arguments:
 #   Options
@@ -15,6 +20,10 @@ include_guard(GLOBAL)
 #     SPEED            - Optional: Interface speed in kHz (default: 4000).
 #     TIMEOUT          - Optional: CTest timeout in seconds per test (default: 60).
 #     INTERFACE        - Optional: Debug interface type (SWD or JTAG, default: SWD).
+#   Multi-Value
+#     SUITES           - Optional: Test suite names to register as individual CTest tests.
+#                        Each suite name is forwarded to the firmware via J-Run --args.
+#                        If omitted, a single CTest test is registered for the entire binary.
 #
 # Outputs:
 #   NONE
@@ -26,19 +35,21 @@ include_guard(GLOBAL)
 #             DEVICE <device>
 #             [INTERFACE <SWD|JTAG>]
 #             [SPEED <kHz>]
-#             [TIMEOUT <seconds>])
+#             [TIMEOUT <seconds>]
+#             [SUITES <suite>...])
 #
 # Example:
-#   meta_jrun(WITH_RTT
-#             TARGET my_firmware
-#             DEVICE LPC55S16
-#             INTERFACE SWD
-#             SPEED 4000
-#             TIMEOUT 60)
+#   meta_jrun(
+#     TARGET    my_firmware-test
+#     DEVICE    LPC55S16
+#     INTERFACE SWD
+#     SPEED     4000
+#     TIMEOUT   60
+#     SUITES    test_leds test_sensors)
 function(meta_jrun)
     set(options WITH_RTT WITH_SEMIHOSTING)
     set(one_value_args TARGET ENABLE DEVICE INTERFACE SPEED TIMEOUT)
-    set(multi_value_args)
+    set(multi_value_args SUITES)
     cmake_parse_arguments(PARSE_ARGV 0 ARG "${options}" "${one_value_args}" "${multi_value_args}")
 
     if(DEFINED ARG_UNPARSED_ARGUMENTS)
@@ -123,10 +134,27 @@ function(meta_jrun)
     # Resolve ELF path from the build target via a generator expression
     set(_meta_jrun_elf "$<TARGET_FILE:${ARG_TARGET}>")
 
-    # Register a single CTest test for the firmware binary
-    add_test(
-        NAME "${ARG_TARGET}"
-        COMMAND "${meta_jrun_exe}" ${_meta_jrun_args} "${_meta_jrun_elf}"
-    )
-    set_tests_properties("${ARG_TARGET}" PROPERTIES TIMEOUT "${ARG_TIMEOUT}")
+    if(ARG_SUITES)
+        # De-duplicate and strip empty suite entries
+        set(_meta_jrun_suites ${ARG_SUITES})
+        list(REMOVE_DUPLICATES _meta_jrun_suites)
+        list(REMOVE_ITEM _meta_jrun_suites "")
+
+        # Register each suite as a separate CTest test; the suite name is forwarded
+        # to the firmware via J-Run --args so the test dispatcher can select only that suite
+        foreach(_meta_jrun_suite IN LISTS _meta_jrun_suites)
+            add_test(
+                NAME "${ARG_TARGET}.${_meta_jrun_suite}"
+                COMMAND "${meta_jrun_exe}" ${_meta_jrun_args} --args "${_meta_jrun_suite}" "${_meta_jrun_elf}"
+            )
+            set_tests_properties("${ARG_TARGET}.${_meta_jrun_suite}" PROPERTIES TIMEOUT "${ARG_TIMEOUT}")
+        endforeach()
+    else()
+        # Register a single CTest test for the entire firmware binary
+        add_test(
+            NAME "${ARG_TARGET}"
+            COMMAND "${meta_jrun_exe}" ${_meta_jrun_args} "${_meta_jrun_elf}"
+        )
+        set_tests_properties("${ARG_TARGET}" PROPERTIES TIMEOUT "${ARG_TIMEOUT}")
+    endif()
 endfunction()

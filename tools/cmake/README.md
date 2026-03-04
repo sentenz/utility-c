@@ -163,7 +163,7 @@ Reusable CMake helper modules for build configuration, testing, and toolchain in
 1. Details
 
     - [meta_jrun.cmake](meta_jrun.cmake)
-      > Registers a pre-built firmware executable as a CTest test via SEGGER J-Run. J-Run flashes the ELF to the connected embedded target and captures output over RTT or semihosting. Generic runner with no knowledge of Unity or any other test framework.
+      > Registers a pre-built firmware executable as CTest test(s) via SEGGER J-Run. J-Run flashes the ELF to the connected embedded target and captures output over RTT or semihosting. When SUITES are provided, each suite is registered as a separate namespaced CTest test with the suite name forwarded via J-Run --args. When no SUITES are specified, a single CTest test is registered for the entire binary.
 
     - [SEGGER J-Run](https://kb.segger.com/J-Run) Documentation
       > Reference for J-Run command-line options and usage.
@@ -188,18 +188,20 @@ Reusable CMake helper modules for build configuration, testing, and toolchain in
               DEVICE <device>
               [INTERFACE <SWD|JTAG>]
               [SPEED <kHz>]
-              [TIMEOUT <seconds>])
+              [TIMEOUT <seconds>]
+              [SUITES <suite>...])
     ```
 
 4. Example
 
     ```cmake
-    meta_jrun(WITH_RTT
-              TARGET my_firmware
-              DEVICE LPC55S16
-              INTERFACE SWD
-              SPEED 4000
-              TIMEOUT 60)
+    meta_jrun(
+      TARGET    my_firmware-test
+      DEVICE    LPC55S16
+      INTERFACE SWD
+      SPEED     4000
+      TIMEOUT   60
+      SUITES    test_leds test_sensors)
     ```
 
 ### 1.6. Meta Policy
@@ -257,25 +259,12 @@ Reusable CMake helper modules for build configuration, testing, and toolchain in
 1. Details
 
     - [meta_unity.cmake](meta_unity.cmake)
-      > Unity-specific layer on top of meta_jrun. Registers Unity-based on-target unit tests with CTest using SEGGER J-Run. When SUITES are provided, each suite is registered as a separate CTest test with the suite name forwarded to the firmware via J-Run --args so that Unity's test dispatcher can select and run only that suite. When no SUITES are specified, a single CTest test is registered for the entire firmware binary via meta_jrun().
-
-    - [meta_jrun.cmake](meta_jrun.cmake)
-      > Generic J-Run CTest runner used internally by meta_unity.
-
-    - [SEGGER J-Run](https://kb.segger.com/J-Run) Documentation
-      > Reference for J-Run command-line options and usage.
+      > Creates or extends a Unity-based embedded test executable. Manages the build side: creates an add_executable target and links any required libraries. The caller's CMake toolchain file controls the cross-compiler. Use meta_jrun() to register the resulting binary as CTest test(s).
 
     - [Unity](https://github.com/ThrowTheSwitch/Unity)
       > C unit testing framework for embedded systems.
 
 2. Prerequisites
-
-    - [SEGGER J-Run](https://kb.segger.com/J-Run)
-      > J-Run CLI v8.10 or later for automated on-target testing via J-Link.
-
-      ```bash
-      # Download and install from https://www.segger.com/downloads/jlink/
-      ```
 
     - [Unity](https://conan.io/center/recipes/unity) Conan Registry
       > Unity C testing framework available as a Conan package.
@@ -291,26 +280,30 @@ Reusable CMake helper modules for build configuration, testing, and toolchain in
     ```cmake
     include(meta_unity)
 
-    meta_unity([WITH_RTT] [WITH_SEMIHOSTING]
-              TARGET <name>
-              [ENABLE <bool>]
-              DEVICE <device>
-              [INTERFACE <SWD|JTAG>]
-              [SPEED <kHz>]
-              [TIMEOUT <seconds>]
-              [SUITES <suite>...])
+    meta_unity(TARGET <name>
+               [ENABLE <bool>]
+               [SOURCES <src>...]
+               [LINK <lib>...])
     ```
 
 4. Example
 
     ```cmake
-    meta_unity(WITH_RTT
-              TARGET my_firmware
-              DEVICE LPC55S16
-              INTERFACE SWD
-              SPEED 4000
-              TIMEOUT 60
-              SUITES test_leds test_sensors)
+    include(meta_unity)
+    include(meta_jrun)
+
+    meta_unity(
+      TARGET   my_firmware-test
+      SOURCES  test_leds.c test_sensors.c
+      LINK     my_firmware::leds)
+
+    meta_jrun(
+      TARGET    my_firmware-test
+      DEVICE    LPC55S16
+      INTERFACE SWD
+      SPEED     4000
+      TIMEOUT   60
+      SUITES    test_leds test_sensors)
     ```
 
 ## 2. References
