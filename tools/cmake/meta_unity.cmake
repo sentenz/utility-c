@@ -68,23 +68,20 @@ function(meta_unity)
     if(NOT ARG_TARGET)
         message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'TARGET' argument is required.")
     endif()
-
     if(NOT TARGET "${ARG_TARGET}")
         message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'TARGET' must be an existing CMake target, but '${ARG_TARGET}' was not found.")
     endif()
-
     get_target_property(_meta_unity_target_type "${ARG_TARGET}" TYPE)
     if(NOT _meta_unity_target_type STREQUAL "EXECUTABLE")
         message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'TARGET' must be an EXECUTABLE target, but '${ARG_TARGET}' is of type '${_meta_unity_target_type}'.")
     endif()
 
-    # Ensure CTest infrastructure is enabled for add_test().
+    # Ensure CTest infrastructure is enabled for add_test()
     if(NOT CMAKE_TESTING_ENABLED)
       enable_testing()
     endif()
 
-    # Find J-Run executable; the result is stored in the CMake cache (FILEPATH) so
-    # repeated calls to this function reuse the value without re-searching the PATH
+    # Find J-Run executable
     if(NOT meta_unity_jrun_exe)
         find_program(meta_unity_jrun_exe NAMES JRun jrun)
     endif()
@@ -93,23 +90,28 @@ function(meta_unity)
         return()
     endif()
 
-    # Apply defaults
+    # Apply defaults and validate arguments
     if(NOT ARG_INTERFACE)
         set(ARG_INTERFACE "SWD")
     endif()
-
-    # Validate debug interface type
+    string(TOUPPER "${ARG_INTERFACE}" ARG_INTERFACE)
     set(_meta_allowed_interfaces "SWD" "JTAG")
-    if(NOT ARG_INTERFACE IN_LIST _meta_allowed_interfaces )
+    if(NOT ARG_INTERFACE IN_LIST _meta_allowed_interfaces)
         message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: Invalid argument of 'INTERFACE' with '${ARG_INTERFACE}'. Allowed values are '${_meta_allowed_interfaces}'.")
     endif()
 
     if(NOT ARG_SPEED)
         set(ARG_SPEED 4000)
     endif()
+    if(NOT ARG_SPEED MATCHES "^[1-9][0-9]*$")
+        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'SPEED' must be a positive integer in kHz, but got '${ARG_SPEED}'.")
+    endif()
 
     if(NOT ARG_TIMEOUT)
         set(ARG_TIMEOUT 60)
+    endif()
+    if(NOT ARG_TIMEOUT MATCHES "^[1-9][0-9]*$")
+        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'TIMEOUT' must be a positive integer in seconds, but got '${ARG_TIMEOUT}'.")
     endif()
 
     # Build base J-Run arguments
@@ -119,7 +121,7 @@ function(meta_unity)
         --speed "${ARG_SPEED}"
     )
 
-    # Add output method flag; RTT is the default when neither option is given
+    # Add output method flag, RTT is the default if no method is specified
     if(ARG_WITH_SEMIHOSTING)
         list(APPEND meta_jrun_args --semihosting)
     else()
@@ -130,11 +132,12 @@ function(meta_unity)
     set(meta_elf_file "$<TARGET_FILE:${ARG_TARGET}>")
 
     if(ARG_SUITES)
-        # Register each suite as a separate CTest test; the suite name is forwarded to
-        # the firmware via J-Run --args so Unity can select and run only that suite.
-        # The firmware must pass argc/argv from main() to a Unity runner that checks
-        # argv[1] and calls the matching suite function (e.g., RunTests_<suite>()).
-        foreach(meta_suite IN LISTS ARG_SUITES)
+        set(_meta_unity_suites ${ARG_SUITES})
+        list(REMOVE_DUPLICATES _meta_unity_suites)
+        list(REMOVE_ITEM _meta_unity_suites "")
+
+        # Register each suite as a separate CTest test, the suite name is forwarded to the firmware via J-Run --args so Unity can select and run only that suite
+        foreach(meta_suite IN LISTS _meta_unity_suites)
             add_test(
                 NAME "${ARG_TARGET}.${meta_suite}"
                 COMMAND "${meta_unity_jrun_exe}" ${meta_jrun_args} --args "${meta_suite}" "${meta_elf_file}"
