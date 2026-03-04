@@ -7,9 +7,10 @@ Reusable CMake helper modules for build configuration, testing, and toolchain in
   - [1.2. Meta Conan](#12-meta-conan)
   - [1.3. Meta Coverage](#13-meta-coverage)
   - [1.4. Meta GTest](#14-meta-gtest)
-  - [1.5. Meta Policy](#15-meta-policy)
-  - [1.6. Meta Sanitizers](#16-meta-sanitizers)
-  - [1.7. Meta Unity](#17-meta-unity)
+  - [1.5. Meta JRun](#15-meta-jrun)
+  - [1.6. Meta Policy](#16-meta-policy)
+  - [1.7. Meta Sanitizers](#17-meta-sanitizers)
+  - [1.8. Meta Unity](#18-meta-unity)
 - [2. References](#2-references)
 
 ## 1. Modules
@@ -157,7 +158,51 @@ Reusable CMake helper modules for build configuration, testing, and toolchain in
     meta_gtest(WITH_CTEST TARGET my_tests SOURCES test_foo.cpp test_bar.cpp LINK my_lib)
     ```
 
-### 1.5. Meta Policy
+### 1.5. Meta JRun
+
+1. Details
+
+    - [meta_jrun.cmake](meta_jrun.cmake)
+      > Registers a pre-built firmware executable as a CTest test via SEGGER J-Run. J-Run flashes the ELF to the connected embedded target and captures output over RTT or semihosting. Generic runner with no knowledge of Unity or any other test framework.
+
+    - [SEGGER J-Run](https://kb.segger.com/J-Run) Documentation
+      > Reference for J-Run command-line options and usage.
+
+2. Prerequisites
+
+    - [SEGGER J-Run](https://kb.segger.com/J-Run)
+      > J-Run CLI v8.10 or later for automated on-target testing via J-Link.
+
+      ```bash
+      # Download and install from https://www.segger.com/downloads/jlink/
+      ```
+
+3. Usage
+
+    ```cmake
+    include(meta_jrun)
+
+    meta_jrun([WITH_RTT] [WITH_SEMIHOSTING]
+              TARGET <name>
+              [ENABLE <bool>]
+              DEVICE <device>
+              [INTERFACE <SWD|JTAG>]
+              [SPEED <kHz>]
+              [TIMEOUT <seconds>])
+    ```
+
+4. Example
+
+    ```cmake
+    meta_jrun(WITH_RTT
+              TARGET my_firmware
+              DEVICE LPC55S16
+              INTERFACE SWD
+              SPEED 4000
+              TIMEOUT 60)
+    ```
+
+### 1.6. Meta Policy
 
 1. Details
 
@@ -182,7 +227,7 @@ Reusable CMake helper modules for build configuration, testing, and toolchain in
     meta_policy()
     ```
 
-### 1.6. Meta Sanitizers
+### 1.7. Meta Sanitizers
 
 1. Details
 
@@ -207,12 +252,15 @@ Reusable CMake helper modules for build configuration, testing, and toolchain in
     meta_sanitizers(ENABLE ON)
     ```
 
-### 1.7. Meta Unity
+### 1.8. Meta Unity
 
 1. Details
 
     - [meta_unity.cmake](meta_unity.cmake)
-      > Registers Unity-based on-target unit tests with CTest using SEGGER J-Run. Each test suite (or the whole binary) is registered as a separate CTest test that invokes J-Run to flash and execute the firmware on the connected embedded target.
+      > Unity-specific layer on top of meta_jrun. Registers Unity-based on-target unit tests with CTest using SEGGER J-Run. When SUITES are provided, each suite is registered as a separate CTest test with the suite name forwarded to the firmware via J-Run --args so that Unity's test dispatcher can select and run only that suite. When no SUITES are specified, a single CTest test is registered for the entire firmware binary via meta_jrun().
+
+    - [meta_jrun.cmake](meta_jrun.cmake)
+      > Generic J-Run CTest runner used internally by meta_unity.
 
     - [SEGGER J-Run](https://kb.segger.com/J-Run) Documentation
       > Reference for J-Run command-line options and usage.

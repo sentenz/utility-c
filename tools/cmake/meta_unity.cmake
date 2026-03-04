@@ -1,9 +1,14 @@
 include_guard(GLOBAL)
 
+include("${CMAKE_CURRENT_LIST_DIR}/meta_jrun.cmake")
+
 # Description:
 #   Registers Unity-based on-target unit tests with CTest using SEGGER J-Run.
-#   Each test suite (or the whole binary) is registered as a separate CTest test
-#   that invokes J-Run to flash and execute the firmware on the connected embedded target.
+#   Builds on meta_jrun() by adding optional per-suite test registration: each
+#   suite name is forwarded to the firmware via J-Run --args so that Unity's
+#   test dispatcher can select and run only that suite.
+#   When no SUITES are specified, a single CTest test is registered for the
+#   entire firmware binary via meta_jrun().
 #
 # Arguments:
 #   Options
@@ -14,7 +19,7 @@ include_guard(GLOBAL)
 #     DEVICE           - Required: Target device name for J-Run (e.g., LPC55S16).
 #     ENABLE           - Optional: Boolean flag to enable/disable registration (default: ON).
 #     SPEED            - Optional: Interface speed in kHz (default: 4000).
-#     TIMEOUT          - Optional: CTest timeout in seconds per test case (default: 60).
+#     TIMEOUT          - Optional: CTest timeout in seconds per test (default: 60).
 #     INTERFACE        - Optional: Debug interface type (SWD or JTAG, default: SWD).
 #   Multi-Value
 #     SUITES           - Optional: Unity test suite names to register as individual CTest tests.
@@ -60,10 +65,6 @@ function(meta_unity)
         message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'WITH_RTT' and 'WITH_SEMIHOSTING' are mutually exclusive.")
     endif()
 
-    if(NOT ARG_DEVICE)
-        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'DEVICE' argument is required.")
-    endif()
-
     # Validate that the specified TARGET exists and is an executable
     if(NOT ARG_TARGET)
         message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'TARGET' argument is required.")
@@ -76,16 +77,48 @@ function(meta_unity)
         message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'TARGET' must be an EXECUTABLE target, but '${ARG_TARGET}' is of type '${_meta_unity_target_type}'.")
     endif()
 
-    # Ensure CTest infrastructure is enabled for add_test()
-    if(NOT CMAKE_TESTING_ENABLED)
-      enable_testing()
+    if(NOT ARG_DEVICE)
+        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'DEVICE' argument is required.")
     endif()
 
-    # Find J-Run executable
-    if(NOT meta_unity_jrun_exe)
-        find_program(meta_unity_jrun_exe NAMES JRun jrun)
+    # Without SUITES, delegate entirely to meta_jrun() for a single whole-binary CTest test
+    if(NOT ARG_SUITES)
+        set(_meta_unity_forward)
+        if(ARG_WITH_RTT)
+            list(APPEND _meta_unity_forward WITH_RTT)
+        endif()
+        if(ARG_WITH_SEMIHOSTING)
+            list(APPEND _meta_unity_forward WITH_SEMIHOSTING)
+        endif()
+        if(DEFINED ARG_ENABLE)
+            list(APPEND _meta_unity_forward ENABLE "${ARG_ENABLE}")
+        endif()
+        if(ARG_INTERFACE)
+            list(APPEND _meta_unity_forward INTERFACE "${ARG_INTERFACE}")
+        endif()
+        if(ARG_SPEED)
+            list(APPEND _meta_unity_forward SPEED "${ARG_SPEED}")
+        endif()
+        if(ARG_TIMEOUT)
+            list(APPEND _meta_unity_forward TIMEOUT "${ARG_TIMEOUT}")
+        endif()
+        meta_jrun(${_meta_unity_forward} TARGET "${ARG_TARGET}" DEVICE "${ARG_DEVICE}")
+        return()
     endif()
-    if(NOT meta_unity_jrun_exe)
+
+    # With SUITES: register one CTest test per suite, forwarding the suite name
+    # to the firmware via J-Run --args so Unity can dispatch the correct suite.
+
+    # Ensure CTest infrastructure is enabled for add_test()
+    if(NOT CMAKE_TESTING_ENABLED)
+        enable_testing()
+    endif()
+
+    # Find J-Run executable (idempotent: reuses meta_jrun_exe cache set by meta_jrun)
+    if(NOT meta_jrun_exe)
+        find_program(meta_jrun_exe NAMES JRun jrun)
+    endif()
+    if(NOT meta_jrun_exe)
         message(WARNING "${CMAKE_CURRENT_FUNCTION}: 'JRun' not found. On-target Unity tests will be disabled.")
         return()
     endif()
@@ -95,9 +128,9 @@ function(meta_unity)
         set(ARG_INTERFACE "SWD")
     endif()
     string(TOUPPER "${ARG_INTERFACE}" ARG_INTERFACE)
-    set(_meta_allowed_interfaces "SWD" "JTAG")
-    if(NOT ARG_INTERFACE IN_LIST _meta_allowed_interfaces)
-        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: Invalid argument of 'INTERFACE' with '${ARG_INTERFACE}'. Allowed values are '${_meta_allowed_interfaces}'.")
+    set(_meta_unity_allowed_interfaces "SWD" "JTAG")
+    if(NOT ARG_INTERFACE IN_LIST _meta_unity_allowed_interfaces)
+        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: Invalid argument of 'INTERFACE' with '${ARG_INTERFACE}'. Allowed values are '${_meta_unity_allowed_interfaces}'.")
     endif()
 
     if(NOT ARG_SPEED)
@@ -115,41 +148,34 @@ function(meta_unity)
     endif()
 
     # Build base J-Run arguments
-    set(meta_jrun_args
+    set(_meta_unity_jrun_args
         --device "${ARG_DEVICE}"
         --if "${ARG_INTERFACE}"
         --speed "${ARG_SPEED}"
     )
 
-    # Add output method flag, RTT is the default if no method is specified
+    # Add output method flag; RTT is the default if no method is specified
     if(ARG_WITH_SEMIHOSTING)
-        list(APPEND meta_jrun_args --semihosting)
+        list(APPEND _meta_unity_jrun_args --semihosting)
     else()
-        list(APPEND meta_jrun_args --rtt)
+        list(APPEND _meta_unity_jrun_args --rtt)
     endif()
 
     # Resolve ELF path from the build target via a generator expression
-    set(meta_elf_file "$<TARGET_FILE:${ARG_TARGET}>")
+    set(_meta_unity_elf "$<TARGET_FILE:${ARG_TARGET}>")
 
-    if(ARG_SUITES)
-        set(_meta_unity_suites ${ARG_SUITES})
-        list(REMOVE_DUPLICATES _meta_unity_suites)
-        list(REMOVE_ITEM _meta_unity_suites "")
+    # De-duplicate and strip empty suite entries
+    set(_meta_unity_suites ${ARG_SUITES})
+    list(REMOVE_DUPLICATES _meta_unity_suites)
+    list(REMOVE_ITEM _meta_unity_suites "")
 
-        # Register each suite as a separate CTest test, the suite name is forwarded to the firmware via J-Run --args so Unity can select and run only that suite
-        foreach(meta_suite IN LISTS _meta_unity_suites)
-            add_test(
-                NAME "${ARG_TARGET}.${meta_suite}"
-                COMMAND "${meta_unity_jrun_exe}" ${meta_jrun_args} --args "${meta_suite}" "${meta_elf_file}"
-            )
-            set_tests_properties("${ARG_TARGET}.${meta_suite}" PROPERTIES TIMEOUT "${ARG_TIMEOUT}")
-        endforeach()
-    else()
-        # Register a single CTest test for the whole target binary
+    # Register each suite as a separate CTest test; the suite name is forwarded
+    # to the firmware via J-Run --args so Unity can select and run only that suite
+    foreach(_meta_unity_suite IN LISTS _meta_unity_suites)
         add_test(
-            NAME "${ARG_TARGET}"
-            COMMAND "${meta_unity_jrun_exe}" ${meta_jrun_args} "${meta_elf_file}"
+            NAME "${ARG_TARGET}.${_meta_unity_suite}"
+            COMMAND "${meta_jrun_exe}" ${_meta_unity_jrun_args} --args "${_meta_unity_suite}" "${_meta_unity_elf}"
         )
-        set_tests_properties("${ARG_TARGET}" PROPERTIES TIMEOUT "${ARG_TIMEOUT}")
-    endif()
+        set_tests_properties("${ARG_TARGET}.${_meta_unity_suite}" PROPERTIES TIMEOUT "${ARG_TIMEOUT}")
+    endforeach()
 endfunction()
