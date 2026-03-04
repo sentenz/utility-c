@@ -78,8 +78,10 @@ function(meta_unity)
     endif()
 
     # Ensure testing is enabled at the top-level so CTest can run registered tests
-    if(NOT BUILD_TESTING)
-        message(WARNING "${CMAKE_CURRENT_FUNCTION}: 'BUILD_TESTING' must be enabled e.g., include(CTest).")
+# Ensure CTest infrastructure is enabled for add_test().
+if(NOT CMAKE_TESTING_ENABLED)
+  enable_testing()
+endif()
     endif()
 
     # Find J-Run executable; the result is stored in the CMake cache (FILEPATH) so
