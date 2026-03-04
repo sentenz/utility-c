@@ -99,6 +99,11 @@ endif()
         set(ARG_INTERFACE "SWD")
     endif()
 
+    # Validate debug interface type
+    set(_meta_allowed_interfaces "SWD" "JTAG")
+    if(NOT ARG_INTERFACE IN_LIST _meta_allowed_interfaces )
+        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: Invalid argument of 'INTERFACE' with '${ARG_INTERFACE}'. Allowed values are '${_meta_allowed_interfaces}'.")
+    endif()
     if(NOT ARG_SPEED)
         set(ARG_SPEED 4000)
     endif()
