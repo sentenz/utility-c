@@ -60,6 +60,15 @@ function(meta_unity)
         message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'TARGET' argument is required.")
     endif()
 
+    # Validate that the specified TARGET exists and is an executable
+    if(NOT TARGET "${ARG_TARGET}")
+        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'TARGET' must be an existing CMake target, but '${ARG_TARGET}' was not found.")
+    endif()
+
+    get_target_property(_meta_unity_target_type "${ARG_TARGET}" TYPE)
+    if(NOT _meta_unity_target_type STREQUAL "EXECUTABLE")
+        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'TARGET' must be an EXECUTABLE target, but '${ARG_TARGET}' is of type '${_meta_unity_target_type}'.")
+    endif()
     if(NOT ARG_DEVICE)
         message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'DEVICE' argument is required.")
     endif()
