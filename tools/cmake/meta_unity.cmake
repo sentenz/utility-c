@@ -11,11 +11,11 @@ include_guard(GLOBAL)
 #     WITH_SEMIHOSTING - Use semihosting for test output communication.
 #   One-Value
 #     TARGET           - Required: CMake target name (executable) to flash and test.
-#     ENABLE           - Optional: Boolean flag to enable/disable registration (default: ON).
 #     DEVICE           - Required: Target device name for J-Run (e.g., LPC55S16).
-#     INTERFACE        - Optional: Debug interface type (SWD or JTAG, default: SWD).
+#     ENABLE           - Optional: Boolean flag to enable/disable registration (default: ON).
 #     SPEED            - Optional: Interface speed in kHz (default: 4000).
 #     TIMEOUT          - Optional: CTest timeout in seconds per test case (default: 60).
+#     INTERFACE        - Optional: Debug interface type (SWD or JTAG, default: SWD).
 #   Multi-Value
 #     SUITES           - Optional: Unity test suite names to register as individual CTest tests.
 #                        Each suite is passed to the firmware via J-Run --args for test filtering.
@@ -56,11 +56,19 @@ function(meta_unity)
         return()
     endif()
 
+    if(ARG_WITH_RTT AND ARG_WITH_SEMIHOSTING)
+        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'WITH_RTT' and 'WITH_SEMIHOSTING' are mutually exclusive.")
+    endif()
+
+    if(NOT ARG_DEVICE)
+        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'DEVICE' argument is required.")
+    endif()
+
+    # Validate that the specified TARGET exists and is an executable
     if(NOT ARG_TARGET)
         message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'TARGET' argument is required.")
     endif()
 
-    # Validate that the specified TARGET exists and is an executable
     if(NOT TARGET "${ARG_TARGET}")
         message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'TARGET' must be an existing CMake target, but '${ARG_TARGET}' was not found.")
     endif()
@@ -69,19 +77,10 @@ function(meta_unity)
     if(NOT _meta_unity_target_type STREQUAL "EXECUTABLE")
         message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'TARGET' must be an EXECUTABLE target, but '${ARG_TARGET}' is of type '${_meta_unity_target_type}'.")
     endif()
-    if(NOT ARG_DEVICE)
-        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'DEVICE' argument is required.")
-    endif()
 
-    if(ARG_WITH_RTT AND ARG_WITH_SEMIHOSTING)
-        message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: 'WITH_RTT' and 'WITH_SEMIHOSTING' are mutually exclusive.")
-    endif()
-
-    # Ensure testing is enabled at the top-level so CTest can run registered tests
-# Ensure CTest infrastructure is enabled for add_test().
-if(NOT CMAKE_TESTING_ENABLED)
-  enable_testing()
-endif()
+    # Ensure CTest infrastructure is enabled for add_test().
+    if(NOT CMAKE_TESTING_ENABLED)
+      enable_testing()
     endif()
 
     # Find J-Run executable; the result is stored in the CMake cache (FILEPATH) so
@@ -104,6 +103,7 @@ endif()
     if(NOT ARG_INTERFACE IN_LIST _meta_allowed_interfaces )
         message(FATAL_ERROR "${CMAKE_CURRENT_FUNCTION}: Invalid argument of 'INTERFACE' with '${ARG_INTERFACE}'. Allowed values are '${_meta_allowed_interfaces}'.")
     endif()
+
     if(NOT ARG_SPEED)
         set(ARG_SPEED 4000)
     endif()
