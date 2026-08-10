@@ -7,7 +7,7 @@ Provides a C language utility library with various helper functions and data str
 - [1. Details](#1-details)
   - [1.1. Prerequisites](#11-prerequisites)
   - [1.2. Usage](#12-usage)
-- [2. Contribute](#2-contribute)
+- [2. Contribution](#2-contribution)
 - [3. Troubleshoot](#3-troubleshoot)
   - [3.1. TODO](#31-todo)
 - [4. References](#4-references)
@@ -50,9 +50,9 @@ Provides a C language utility library with various helper functions and data str
 
 > TODO Add usage instructions and examples for the utility library
 
-## 2. Contribute
+## 2. Contribution
 
-[CONTRIBUTING.md](CONTRIBUTING.md) provides guidens and instructions for contributing to the project.
+[CONTRIBUTING.md](CONTRIBUTING.md) provides guidance and instructions for contributing to the project.
 
 - [AI Agents](CONTRIBUTING.md#1-ai-agents)
   > Automated tools that assist in various development tasks such as code generation, testing, and documentation.
