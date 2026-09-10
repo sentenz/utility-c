@@ -61,6 +61,25 @@
       "inherits": [
         "base"
       ]
+    },
+    {
+      "name": "ontarget",
+      "displayName": "Configure On-Target Tests",
+      "description": "Configuration for cross-compiled on-target tests via SEGGER J-Run",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "toolchainFile": "${sourceDir}/tools/cmake/toolchain-arm-none-eabi.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "${sourceDir}/build/${presetName}/lib",
+        "CMAKE_LIBRARY_OUTPUT_DIRECTORY": "${sourceDir}/build/${presetName}/lib",
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/build/${presetName}/bin",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "META_PROJECT_NAME": "utility-c",
+        "META_BUILD_TESTING": true,
+        "META_ENABLE_COMPILER_CACHE": true,
+        "META_JRUN_DEVICE": "STM32F407VG"
+      }
     }
   ],
   "buildPresets": [
@@ -81,6 +100,12 @@
       "displayName": "Build Tests",
       "description": "Build the project with tests",
       "configurePreset": "test"
+    },
+    {
+      "name": "ontarget",
+      "displayName": "Build On-Target Tests",
+      "description": "Cross-compile on-target tests for the ARM target",
+      "configurePreset": "ontarget"
     }
   ],
   "testPresets": [
@@ -90,6 +115,18 @@
       "description": "Execute all tests from the build",
       "configuration": "Debug",
       "configurePreset": "test"
+    },
+    {
+      "name": "ontarget",
+      "displayName": "Execute On-Target Tests",
+      "description": "Flash and execute on-target tests via SEGGER J-Run",
+      "configuration": "Debug",
+      "configurePreset": "ontarget",
+      "filter": {
+        "include": {
+          "label": "ontarget"
+        }
+      }
     }
   ]
 }
