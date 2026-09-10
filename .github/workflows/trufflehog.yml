@@ -29,8 +29,6 @@ jobs:
         continue-on-error: true
         with:
           path: ./
-          base: ${{ github.event.before }}
-          head: ${{ github.sha }}
           extra_args: --debug
 
       - name: Results Status

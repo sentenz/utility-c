@@ -20,7 +20,10 @@ deny_conan contains msg if {
 	version := parts[1]
 
 	not is_strict_semver(version)
-	msg := sprintf("Dependency '%s' uses ranged version specifier '%s'. Pin to the exact semantic versioning tag like 'v1.2.3'.", [requirement, version])
+	msg := sprintf(
+		"Dependency '%s' uses ranged version specifier '%s'. Pin to the exact semantic versioning tag like 'v1.2.3'.",
+		[requirement, version],
+	)
 }
 
 is_strict_semver(v) if {
