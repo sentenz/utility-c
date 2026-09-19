@@ -23,14 +23,20 @@ if(META_BUILD_TESTING)
     include(meta_conan)
     meta_conan()
 
-    include(meta_sanitizers)
-    meta_sanitizers(ENABLE ${META_BUILD_TESTING})
+    if(NOT CMAKE_CROSSCOMPILING)
+        include(meta_sanitizers)
+        meta_sanitizers(ENABLE ${META_BUILD_TESTING})
 
-    include(meta_coverage)
-    meta_coverage(ENABLE ${META_BUILD_TESTING})
+        include(meta_coverage)
+        meta_coverage(ENABLE ${META_BUILD_TESTING})
+    endif()
 
     # add_subdirectory(tests)
 endif()
 
 add_subdirectory(external)
 add_subdirectory(src)
+
+if(META_BUILD_TESTING AND CMAKE_CROSSCOMPILING)
+    add_subdirectory(tests/ontarget)
+endif()

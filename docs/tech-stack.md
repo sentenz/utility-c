@@ -37,6 +37,9 @@ A Tech Stack (Technology Stack) refers to the combination of languages, framewor
     - [x] GNU Compiler Collection (GCC)
       > GCC is a compiler system supporting various programming languages for compiling C and C++ code on Unix-like systems.
 
+    - [x] [ARM GNU Embedded Toolchain](https://developer.arm.com/Tools%20and%20Software/GNU%20Toolchain)
+      > A cross-compiler toolchain (arm-none-eabi-gcc) for bare-metal ARM Cortex-M targets, used for on-target testing of the embedded library code.
+
 6. Analysis
 
     - [x] [Clang-Format](https://clang.llvm.org/docs/ClangFormat.html)
@@ -58,6 +61,9 @@ A Tech Stack (Technology Stack) refers to the combination of languages, framewor
 
     - [x] [CTest](https://cmake.org/cmake/help/latest/manual/ctest.1.html#)
       > A testing tool integrated with CMake, primarily used for running tests and ensuring code quality across builds.
+
+    - [x] [SEGGER J-Run](https://www.segger.com/products/debug-probes/j-link/tools/j-run/)
+      > A command-line tool that flashes a firmware image onto a target MCU via a J-Link debug probe, executes the program, and captures semihosting output. Used for on-target testing of cross-compiled GTest binaries.
 
     - [x] [gcov](https://gcc.gnu.org/onlinedocs/gcc/Gcov.html)
       > A test coverage program used to analyze and create code coverage reports for C/C++ programs.
