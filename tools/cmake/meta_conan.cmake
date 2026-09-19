@@ -12,6 +12,8 @@ include_guard(GLOBAL)
 #     USER_PRESETS_PATH     - Path for CMakeUserPresets.json generation (default: "").
 #     INSTALL_FOLDER        - Folder for Conan generated files (default: ${CMAKE_BINARY_DIR}/conan).
 #     SOURCE_DIR            - Source directory for Conan (default: ${CMAKE_SOURCE_DIR}).
+#     PROFILE_BUILD         - Conan build-machine profile (default: "").
+#     PROFILE_HOST          - Conan target-machine profile for cross-compilation (default: "").
 #   Multi-Value
 #     GENS                  - List of Conan generators (default: CMakeToolchain;CMakeDeps).
 #
@@ -26,11 +28,14 @@ include_guard(GLOBAL)
 #     [USER_PRESETS_PATH <path>]
 #     [INSTALL_FOLDER <path>]
 #     [SOURCE_DIR <path>]
+#     [PROFILE_BUILD <profile>]
+#     [PROFILE_HOST <profile>]
 #     [GENS <gen>...]
 #   )
 #
 # Example:
 #   meta_conan(AUTO_INSTALL ON CREATE_INSTALL_TARGET)
+#   meta_conan(PROFILE_BUILD default PROFILE_HOST tools/conan/profiles/arm-none-eabi)
 
 ### Helper: ensure conan executable is available (optionally install via pip)
 function(z_meta_conan_ensure_executable auto_install out_var)
@@ -71,6 +76,8 @@ function(
     install_folder
     gens
     user_presets_path
+    profile_build
+    profile_host
     out_args_var
 )
     set(args)
@@ -94,6 +101,17 @@ function(
     if(user_presets_path)
         list(APPEND args -o)
         list(APPEND args "CMakeToolchain/*:user_presets_path=${user_presets_path}")
+    endif()
+
+    # Cross-compilation profiles: --profile:build provides settings for the
+    # machine where the compilation runs; --profile:host provides settings for
+    # the machine where the compiled binary will execute (the target).
+    if(profile_build)
+        list(APPEND args --profile:build "${profile_build}")
+    endif()
+
+    if(profile_host)
+        list(APPEND args --profile:host "${profile_host}")
     endif()
 
     # Pass the list elements to the parent scope (preserve as list)
@@ -230,7 +248,7 @@ endfunction()
 
 function(meta_conan)
     set(options CREATE_INSTALL_TARGET)
-    set(one_value_args AUTO_INSTALL USER_PRESETS_PATH INSTALL_FOLDER SOURCE_DIR)
+    set(one_value_args AUTO_INSTALL USER_PRESETS_PATH INSTALL_FOLDER SOURCE_DIR PROFILE_BUILD PROFILE_HOST)
     set(multi_value_args GENS)
     cmake_parse_arguments(PARSE_ARGV 0 ARG "${options}" "${one_value_args}" "${multi_value_args}")
 
@@ -254,6 +272,12 @@ function(meta_conan)
     endif()
     if(NOT DEFINED ARG_GENS)
         set(ARG_GENS "CMakeToolchain;CMakeDeps")
+    endif()
+    if(NOT DEFINED ARG_PROFILE_BUILD)
+        set(ARG_PROFILE_BUILD "")
+    endif()
+    if(NOT DEFINED ARG_PROFILE_HOST)
+        set(ARG_PROFILE_HOST "")
     endif()
 
     # If caller already provided a nested toolchain path that points into a
@@ -291,7 +315,7 @@ function(meta_conan)
     endif()
 
     # Build arguments for conan install
-    z_meta_conan_build_install_args("${ARG_SOURCE_DIR}" "${ARG_INSTALL_FOLDER}" "${ARG_GENS}" "${ARG_USER_PRESETS_PATH}" conan_args)
+    z_meta_conan_build_install_args("${ARG_SOURCE_DIR}" "${ARG_INSTALL_FOLDER}" "${ARG_GENS}" "${ARG_USER_PRESETS_PATH}" "${ARG_PROFILE_BUILD}" "${ARG_PROFILE_HOST}" conan_args)
 
     # Create custom target if requested
     z_meta_conan_maybe_create_install_target("${ARG_CREATE_INSTALL_TARGET}" "${meta_conan_exe}" "${ARG_INSTALL_FOLDER}" "${ARG_SOURCE_DIR}" ${conan_args})

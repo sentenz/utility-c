@@ -1,0 +1,27 @@
+# Conan host profile for ARM Cortex-M bare-metal cross-compilation.
+#
+# Usage (from the project root):
+#   conan install . \
+#     --profile:build=default \
+#     --profile:host=tools/conan/profiles/arm-none-eabi \
+#     --output-folder build/ontarget/conan \
+#     --build missing
+#
+# Requirements:
+#   - arm-none-eabi-gcc toolchain on PATH
+#   - Conan >= 2.0
+
+[settings]
+os=baremetal
+arch=armv7em
+compiler=gcc
+compiler.version=12
+compiler.libcxx=libstdc++11
+build_type=Debug
+
+[buildenv]
+CC=arm-none-eabi-gcc
+CXX=arm-none-eabi-g++
+AR=arm-none-eabi-ar
+AS=arm-none-eabi-gcc
+STRIP=arm-none-eabi-strip
