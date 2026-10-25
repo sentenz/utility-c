@@ -8,7 +8,7 @@
     "argon2",
     "pcre"
   ],
-  "builtin-baseline": "bf19794383e8fb95eba5aa553235bc8ec2271688",
+  "builtin-baseline": "817892b0ecbc6af994dd6df999c73faf795adbf2",
   "overrides": [
     {
       "name": "uriparser",
