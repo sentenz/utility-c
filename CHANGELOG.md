@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.5](https://github.com/sentenz/utility-c/compare/1.2.4...1.2.5) (2026-11-01)
+
+### Bug Fixes
+
+* **deps:** update microsoft/vcpkg digest to 9a5dfef ([#85](https://github.com/sentenz/utility-c/issues/85)) ([8643da3](https://github.com/sentenz/utility-c/commit/8643da3c6d53921b3d302828a42c2377db322e7d))
+
 ## [1.2.4](https://github.com/sentenz/utility-c/compare/1.2.3...1.2.4) (2026-10-25)
 
 ### Bug Fixes
