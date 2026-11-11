@@ -32,5 +32,20 @@ if(META_BUILD_TESTING)
     # add_subdirectory(tests)
 endif()
 
+if(META_BUILD_TESTING_ONTARGET)
+    include(CTest)
+    if(NOT DEFINED BUILD_TESTING)
+        enable_testing()
+    endif()
+
+    include(meta_conan)
+    meta_conan(
+        PROFILE_BUILD ${META_CONAN_PROFILE_BUILD}
+        PROFILE_HOST  ${META_CONAN_PROFILE_HOST}
+    )
+
+    add_subdirectory(tests/ontarget)
+endif()
+
 add_subdirectory(external)
 add_subdirectory(src)

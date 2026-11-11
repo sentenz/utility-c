@@ -102,6 +102,27 @@ cmake-gcc-test-unit-coverage:
 	$(MAKE) analysis-dynamic-coverage
 .PHONY: cmake-gcc-test-unit-coverage
 
+## Generate a CMake project configured for on-target tests (ARM cross-compilation)
+cmake-arm-test-ontarget-configure:
+	cmake --preset ontarget
+.PHONY: cmake-arm-test-ontarget-configure
+
+## Cross-compile the on-target tests for ARM
+cmake-arm-test-ontarget-build: cmake-arm-test-ontarget-configure
+	cmake --build --preset ontarget
+.PHONY: cmake-arm-test-ontarget-build
+
+## Flash and run the on-target tests via SEGGER J-Run
+cmake-arm-test-ontarget-run: cmake-arm-test-ontarget-build
+	@mkdir -p "$(CURDIR)/${LOGS_PATH_TEST}"
+	ctest --preset ontarget --output-junit "$(CURDIR)/${LOGS_PATH_TEST}/junit-ontarget.xml"
+.PHONY: cmake-arm-test-ontarget-run
+
+## Clean the on-target test build artifacts
+cmake-arm-test-ontarget-clean:
+	cmake --build --preset ontarget --target clean
+.PHONY: cmake-arm-test-ontarget-clean
+
 # ── Software Analysis ────────────────────────────────────────────────────────────────────────────
 
 LOGS_PATH_COVERAGE := logs/coverage
